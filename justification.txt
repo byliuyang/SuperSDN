@@ -1,0 +1,27 @@
+We decided to choose Floodlight as our OpenFlow controller for the following reasons:
+
+Pros
+
+They are both open source for developer’s modification.
+
+Floodlight is still under active maintenance.
+Floodlight has detailed documentations.
+Floodlight is compatible with Open vSwitch and ofsoftswitch
+Floodlight supports Forwarding
+Floodlight supports Learning Switch
+Floodlight provides Static Flow Entry Pusher
+Floodlight provides Circuit Pusher
+Floodlight allow user to proactively install forwarding paths
+Floodlight is easy to deploy with command line tool
+Floodlight has more stars on github, which seems that is more trustworthy
+
+POX has low learning curve
+POX has online tutorials
+POX is developed for teaching and research
+
+Cons
+
+Floodlight has too many advanced features build in, having higher learning curve
+
+POX forces user to read it code to understand how it works due to lack of documentation
+
