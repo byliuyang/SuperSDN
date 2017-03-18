@@ -1,0 +1,9 @@
+sudo nano /etc/network/interfaces
+sudo ifdown eth0:0 && sudo ifup eth0:0
+sudo apt-get install openvswitch-datapath-source bridge-utils
+sudo apt-get install openvswitch-switch
+sudo systemctl start openvswitch-switch
+sudo ovs-vsctl add-br br-int
+sudo ovs-vsctl add-port br-int eth0:0
+sudo ovs-vsctl set-controller br-int tcp:10.45.2.4:6653
+
