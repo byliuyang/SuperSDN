@@ -1,0 +1,21 @@
+sudo nano /etc/network/interfaces
+sudo ifdown eth0 && sudo ifup eth0
+sudo apt-get install apache2
+sudo nano /etc/www/html/index.html
+sudo apt-get install bind9
+sudo systemctl restart bind9
+sudo nano /etc/bind/named.conf.options
+sudo nano /etc/bind/named.conf.local
+sudo mkdir /etc/bind/zones
+cd /etc/bind/zones
+sudo cp ../db.local ./db.team2.cs4516.cs.wpi.edu
+sudo nano /etc/bind/zones/db.team2.cs4516.cs.wpi.edu
+sudo named-checkconf
+sudo named-checkzone team2.cs4516.cs.wpi.edu db.team2.cs4516.cs.wpi.edu
+sudo systemctl restart bind9
+sudo apt-get install build-essential openjdk-7-jdk ant maven python-dev
+cd floodlight
+ant
+sudo mkdir /var/lib/floodlight
+sudo chmod 777 /var/lib/floodlight
+java -jar target/floodlight.jar
