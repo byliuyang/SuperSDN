@@ -21,14 +21,99 @@ What you need to have before installing SuperSDN
 
 Configure IP addresses for virtual machines
 
-  - Host 1: 10.45.x.1
-  - Host 2: 10.45.x.2
-  - Host 3: 10.45.x.3
-  - Host 4: 10.45.x.4
+On Host 1, edit /etc/network/interfaces
+  
+ ```
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+# The loopback network interface
+auto lo
+iface lo inet loopback
+	
+auto eth0
+auto eth0:0
+	
+iface eth0 inet dhcp
+	
+iface eth0:0 inet static
+address 10.45.2.33
+netmask 255.255.255.224
+#metric 100
+up route add -net 10.45.2.128 netmask 255.255.255.128 gw 10.45.2.34 metric 100
+ ```
+  
+  On Host 2, edit /etc/network/interfaces
 
 ```
-Give the example
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet dhcp
+
+auto eth0:0
+iface eth0:0 inet static
+address 10.45.2.34
+netmask 255.255.255.224
+
+auto eth0:1
+iface eth0:1 inet static
+address 10.45.2.65
+netmask 255.255.255.224
+
+auto eth0:2
+iface eth0:2 inet static
+address 10.45.2.97
+netmask 255.255.255.224
 ```
+
+On Host 3, edit /etc/network/interfaces
+
+```
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet dhcp
+
+auto eth0:0
+
+iface eth0 inet static
+address 10.45.2.66
+netmask 255.255.255.224
+up route add -net 10.45.2.0 netmask 255.255.255.128 gw 10.45.2.65 metric 10
+
+iface eth0:0 inet static
+address 10.45.2.200
+netmask 255.255.255.0
+```
+
+On Host 4, edit /etc/network/interfaces
+
+```
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet dhcp
+
+iface eth0 inet static
+address 10.45.2.98
+netmask 255.255.255.224
+```
+
 Add IP aliases to each of these machines with CIDR prefix length of 27. 
 
 | Host # | Original Address | Additional Alias(es)	 | Additional Static Routes                        |
