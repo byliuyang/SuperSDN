@@ -124,35 +124,243 @@ Add IP aliases to each of these machines with CIDR prefix length of 27.
 Install apache on Host 3 and Host 4
 
 ```
-Give the example
+sudo apt-get install apache2
 ```
-Edit index.html on Host 4 to indicate it's Honeypot
+
+Edit  /var/www/html/index.html on Host 3 to indicate it's real server
 
 ```
-Give the example
+<!Doctype html> 
+<html><head>
+<title>Real Server</title>
+</head>
+<body cz-shortcut-listen="true">
+<h1>This is the <strong style="color:green">Real Server</strong></h1>
 ```
+
+Edit  /var/www/html/index.html on Host 4 to indicate it's Honeypot
+
+```
+<!Doctype html> 
+<html><head>
+<title> HoneyPot </title>
+</head>
+<body cz-shortcut-listen="true">
+<h1>This is the <strong style="color:red">HoneyPot</strong></h1>
+```
+
+---
 
 Install bind9 on Host 4
 
-Add a entry to DNS zone file for the web server
-
 ```
-www.team[x].4516.cs.wpi.edu. A 10.45.x.10
+sudo apt-get install bind9
 ```
 
-Install Open vSwitch on Host 3
+Edit /etc/bind/named.conf.local to
 
 ```
-Give the example
+zone "example.com" {
+    type master;
+    file "/etc/bind/zones/db.example.com"; # zone file path
+};
+```
+
+Create zone file
+
+```
+sudo mkdir /etc/bind/zones
+cd /etc/bind/zones
+```
+
+Copy ../db.local to ./db.example.com
+
+```
+sudo cp ../db.local ./db.example.com
+```
+
+Edit /etc/bind/zones/db.example.com to
+
+```
+;
+; BIND data file for local loopback interface
+;
+$TTL    10
+@       IN      SOA     example.com. admin.example.com. (
+                               4        ; Serial
+                              10        ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+
+; name servers - NS records
+    IN      NS      ns1. example.com.
+
+; name servers - A records
+ns1.example.com.             		 IN      A      10.45.2.4
+
+; A records
+www.example.com.            		 IN      A      10.45.1.10
+```
+
+Check BIND Configuration Syntax
+
+```
+sudo named-checkconf
+sudo named-checkzone example.com db.example.com
+```
+
+---
+
+--- 
+
+Download and initialize Floodlight on local machine
+
+```
+git clone git://github.com/floodlight/floodlight.git
+cd floodlight
+git submodule init
+git submodule update
+```
+
+Compress Floodlight folder and upload the zip file to Host 4
+
+```
+cd ../
+zip -r floodlight.zip floodlight
+scp floodlight.zip user@x.x.x.x:/home/user
+```
+
+Unzip floodlight on Host 4
+
+```
+sudo apt-get install unzip
+unzip floodlight.zip
+```
+
+Install build tools
+
+```
+sudo apt-get install build-essential ant maven python-dev default-jdk
+```
+
+Change floodlight source directory privillege
+
+```
+sudo chmod -R 777 floodlight
 ```
 
 Install Floodlight on Host 4
 
 ```
-Give the example
+cd floodlight
+ant
+sudo mkdir /var/lib/floodlight
+sudo chmod 777 /var/lib/floodlight
 ```
 
-End with an example of getting some data out of the system or using it for a little demo
+Create floodlight system service for it running in background
+
+Edit /etc/systemd/system/floodlight.service
+
+```
+[Unit]
+Description=Floodlight Service
+
+[Service]
+Type=simple
+WorkingDirectory=/home/cs4516/floodlight
+ExecStart=/usr/bin/java -jar target/floodlight.jar
+```
+
+Reload service
+
+```
+sudo systemctl daemon-reload
+```
+
+Start floodlight service
+
+```
+sudo service floodlight start
+```
+
+Check floodlight standdard status
+
+```
+sudo service floodlight status
+```
+
+
+Check floodlight standdard output
+
+```
+sudo journalctl -u floodlight
+```
+
+Visit http://10.45.2.4:8080/ui/pages/index.html in broswer
+
+![Control Panel](controller.png)
+
+---
+
+Install Open vSwitch on Host 3
+
+```
+sudo apt-get install openvswitch-switch
+```
+
+Start openvswitch-switch service
+
+```
+sudo service openvswitch-switch start
+```
+
+Add a bridge to openvswitch
+
+```
+sudo ovs-vsctl add-br openflow_bridge
+```
+
+Add network interface eth0:0, eth0:1 and eth0:2  to the openflow_bridge
+
+```
+sudo ovs-vsctl add-port openflow_bridge eth0:0
+sudo ovs-vsctl add-port openflow_bridge eth0:1
+sudo ovs-vsctl add-port openflow_bridge eth0:2
+```
+
+Attach openvswitch to floodlight controller. Port number can be find in floodlight standard output.
+
+```
+sudo ovs-vsctl set-controller openflow_bridge tcp:10.45.2.98:6653
+```
+
+Show bridge info
+
+```
+sudo ovs-vsctl show
+```
+
+Example bride info
+
+```
+Bridge openflow_bridge
+        Controller "tcp:10.45.2.98:6653"
+            is_connected: true
+        Port "eth0:1"
+            Interface "eth0:1"
+        Port openflow_bridge
+            Interface openflow_bridge
+                type: internal
+        Port "eth0:0"
+            Interface "eth0:0"
+        Port "eth0:2"
+            Interface "eth0:2"
+    ovs_version: "2.0.2"
+```
+
+![Switch](switch.png)
 
 ## Built With
 
