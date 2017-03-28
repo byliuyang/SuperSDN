@@ -121,6 +121,8 @@ Add IP aliases to each of these machines with CIDR prefix length of 27.
 | 2  	      | 10.45.x.2		| 10.45.x.34/27 <br/>10.45.x.65/27 <br/> 10.45.x.97/27 |      || 3          | 10.45.x.3		| 10.45.x.66/27           | 10.45.x.0/25 via gateway 10.45.x.65     |
 | 4 	      | 10.45.x.4 		| 10.45.x.98/27	      |	                                                                      |
 
+---
+
 Install apache on Host 3 and Host 4
 
 ```
@@ -211,8 +213,6 @@ sudo named-checkzone example.com db.example.com
 ```
 
 ---
-
---- 
 
 Download and initialize Floodlight on local machine
 
