@@ -1,8 +1,0 @@
-sudo apt-get update
-sudo apt-get install apache2
-sudo nano /var/www/html/index.html 
-sudo /etc/init.d/networking restart
-sudo nano /etc/network/interfaces
-sudo ifdown eth0 && sudo ifup eth0
-ifconfig
-route -n
