@@ -1,0 +1,16 @@
+We used the TimingTest.js script to test out timing.
+This script tries to do a simple TCP connection and counts elapsed time.
+
+We first disabled vswitch and enabled ipv4 forwarding.
+Results are in the WithoutVswithc.txt
+The avarage was: 0.35 ms
+
+Then we enabled vswitch and disabled ipv4 forwarding.
+Results are in the WithVswitch.txt
+The avarage was: 3.86 ms
+
+Conclusion:
+When a new packet comes into the OpenFlow switch it is slowed down.
+This is because the switch has to ask the controller what to do with the packet.
+When this communication happens the time for a connection to be established takes longer.
+This in general should not effect a big network since the OpenFlow enabled switch does not need to ask every incoming packet. 
