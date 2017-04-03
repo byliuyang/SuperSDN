@@ -18,8 +18,6 @@ import org.projectfloodlight.openflow.types.EthType;
 import org.projectfloodlight.openflow.types.IPv4Address;
 import org.projectfloodlight.openflow.types.MacAddress;
 import org.projectfloodlight.openflow.types.OFPort;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -30,7 +28,6 @@ import java.util.*;
  * @version April 1, 2017
  */
 public class GatewayController implements IFloodlightModule, IOFMessageListener {
-    protected static Logger                     logger;
     protected        IFloodlightProviderService floodlightProvider;
     private        HashMap<IPv4Address, MacAddress>    ipToMacAddresses;
     private final String SWITCH_IP_ADDR = "10.45.2.2";
@@ -189,7 +186,6 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
         ipToMacAddresses = new HashMap<>();
         ipToMacAddresses.put(IPv4Address.of("10.45.2.128"), MacAddress.of("52:54:00:45:16:07"));
         ipToMacAddresses.put(IPv4Address.of("10.45.2.1"), MacAddress.of("52:54:00:45:16:05"));
-        logger = LoggerFactory.getLogger(GatewayController.class);
     }
     
     @Override
