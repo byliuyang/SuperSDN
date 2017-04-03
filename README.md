@@ -333,7 +333,13 @@ sudo ovs-vsctl add-port openflow_bridge eth0:2
 Attach openvswitch to floodlight controller. Port number can be find in floodlight standard output.
 
 ```
-sudo ovs-vsctl set-controller openflow_bridge tcp:10.45.2.98:6653
+sudo ovs-vsctl set-controller openflow_bridge tcp:10.45.2.4:6653
+```
+
+Enable openflow 1.3
+
+```
+sudo ovs-vsctl set bridge openflow_bridge protocols=OpenFlow10,OpenFlow11,OpenFlow12,OpenFlow13
 ```
 
 Show bridge info

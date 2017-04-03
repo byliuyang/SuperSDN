@@ -1,0 +1,10 @@
+2f83079a-2647-46a6-b8b5-4f9dbf99db93
+    Bridge "br0"
+        Controller "tcp:10.45.2.4:6653"
+            is_connected: true
+        Port "eth0"
+            Interface "eth0"
+        Port "br0"
+            Interface "br0"
+                type: internal
+    ovs_version: "2.5.0"
