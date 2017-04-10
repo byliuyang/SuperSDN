@@ -40,7 +40,7 @@ ns1.team2.4516.cs.wpi.edu.                     IN      A      10.45.2.2
 
 ; A records
 www.team2.4516.cs.wpi.edu.                     IN      A      10.45.1.10
-" >> /etc/bind/zones/db.team2.4516.cs.wpi.edu
+" > /etc/bind/zones/db.team2.4516.cs.wpi.edu
 
 	service bind9 start
 	apt install -y openvswitch-switch
@@ -63,3 +63,4 @@ elif [ $1 = "4" ]; then
 else
 	echo "ARGUEMENT NOT RECOGNIZED BUT DEPLOYED COMMON SETTINGS"
 fi
+
