@@ -17,7 +17,7 @@ elif [ $1 = "2" ]; then
 	    file \"/etc/bind/zones/db.team2.4516.cs.wpi.edu\"; # zone file path
 	};" > /etc/bind/named.conf.local
 	mkdir /etc/bind/zones
-	sudo cp /etc/bind/db.local /etc/bind/zones/db.team2.4516.cs.wpi.edu
+	cp /etc/bind/db.local /etc/bind/zones/db.team2.4516.cs.wpi.edu
 echo ";
 ; BIND data file for local loopback interface
 ;
@@ -33,7 +33,7 @@ echo ";
 ;@	IN	A	127.0.0.1
 ;@	IN	AAAA	::1
 ; name servers - NS records
-IN      NS      ns1.team2.4516.cs.wpi.edu.
+	IN      NS      ns1.team2.4516.cs.wpi.edu.
 
 ; name servers - A records
 ns1.team2.4516.cs.wpi.edu.                     IN      A      10.45.2.2
@@ -63,4 +63,3 @@ elif [ $1 = "4" ]; then
 else
 	echo "ARGUEMENT NOT RECOGNIZED BUT DEPLOYED COMMON SETTINGS"
 fi
-
