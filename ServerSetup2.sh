@@ -61,7 +61,7 @@ elif [ $1 = "3" ]; then
 	<h1>This is the <strong style=\"color:green\">Real Server</strong></h1>" > /var/www/html/index.html
 
 	for i in `seq 128 254`;
-   ifconfig eth0:$i 10.45.2.$i up
+		ifconfig eth0:$i 10.45.2.$i up
 	done
 
 elif [ $1 = "4" ]; then
