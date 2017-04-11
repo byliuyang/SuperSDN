@@ -21,7 +21,7 @@ elif [ $1 = "2" ]; then
 echo ";
 ; BIND data file for local loopback interface
 ;
-\$TTL	604800
+\$TTL	10
 @	IN	SOA	localhost. root.localhost. (
 2		; Serial
 604800		; Refresh
@@ -43,9 +43,10 @@ www.team2.4516.cs.wpi.edu.                     IN      A      10.45.1.10
 " > /etc/bind/zones/db.team2.4516.cs.wpi.edu
 
 	service bind9 start
-	apt install -y openvswitch-switch
-	service openvswitch-switch start
-	ovs-vsctl add-br br0 && ovs-vsctl add-port br0 eth0 &&  ifconfig eth0 0 && dhclient -r eth0 &&  dhclient br0 && ifconfig br0 10.45.2.2 &&  ovs-vsctl set-controller br0 tcp:10.10.152.59:6653
+	sudo named-checkzone team2.4516.cs.wpi.edu db.team2.4516.cs.wpi.edu
+	#apt install -y openvswitch-switch
+	#service openvswitch-switch start
+	#ovs-vsctl add-br br0 && ovs-vsctl add-port br0 eth0 &&  ifconfig eth0 0 && dhclient -r eth0 &&  dhclient br0 && ifconfig br0 10.45.2.2 &&  ovs-vsctl set-controller br0 tcp:10.10.152.59:6653
 elif [ $1 = "3" ]; then
 	echo "DEPLOYING SERVER 3"
 	apt install -y bind9
