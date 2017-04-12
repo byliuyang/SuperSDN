@@ -73,7 +73,7 @@ elif [ $1 = "4" ]; then
 	echo "DEPLOYING SERVER 4"
 	apt install -y openvswitch-switch
 	service openvswitch-switch start
-	ovs-vsctl add-br br0 && ovs-vsctl add-port br0 eth0 &&  ifconfig eth0 0 && dhclient -r eth0 &&  dhclient br0 && ifconfig br0 10.45.2.2 &&  ovs-vsctl set-controller br0 tcp:10.10.152.151:6653
+	ovs-vsctl add-br br0 && ovs-vsctl add-port br0 eth0 &&  ifconfig eth0 0 && dhclient -r eth0 &&  dhclient br0 && ifconfig br0 10.45.2.4 &&  ovs-vsctl set-controller br0 tcp:10.10.152.151:6653
 else
 	echo "ARGUEMENT NOT RECOGNIZED BUT DEPLOYED COMMON SETTINGS"
 fi
