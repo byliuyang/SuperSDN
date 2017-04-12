@@ -60,12 +60,20 @@ elif [ $1 = "3" ]; then
 	<body cz-shortcut-listen=\"true\">
 	<h1>This is the <strong style=\"color:green\">Real Server</strong></h1>" > /var/www/html/index.html
 
+	apt install -y openvswitch-switch
+	service openvswitch-switch start
+	ovs-vsctl add-br br0 && ovs-vsctl add-port br0 eth0 &&  ifconfig eth0 0 && dhclient -r eth0 &&  dhclient br0 && ifconfig br0 10.45.2.3 &&  ovs-vsctl set-controller br0 tcp:10.10.152.59:6653
+
 	for i in `seq 128 254`;
+	do
 		ifconfig eth0:$i 10.45.2.$i up
 	done
 
 elif [ $1 = "4" ]; then
 	echo "DEPLOYING SERVER 4"
+	apt install -y openvswitch-switch
+	service openvswitch-switch start
+	ovs-vsctl add-br br0 && ovs-vsctl add-port br0 eth0 &&  ifconfig eth0 0 && dhclient -r eth0 &&  dhclient br0 && ifconfig br0 10.45.2.2 &&  ovs-vsctl set-controller br0 tcp:10.10.152.151:6653
 else
 	echo "ARGUEMENT NOT RECOGNIZED BUT DEPLOYED COMMON SETTINGS"
 fi
