@@ -26,6 +26,8 @@ import org.projectfloodlight.openflow.protocol.match.MatchField;
 import org.projectfloodlight.openflow.types.*;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static net.floodlightcontroller.gatewaycontroller.dns.DNSResponse.modifyDNSReponse;
 
@@ -37,20 +39,19 @@ import static net.floodlightcontroller.gatewaycontroller.dns.DNSResponse.modifyD
  * @version April 13, 2017
  */
 public class GatewayController implements IFloodlightModule, IOFMessageListener {
-    private final String      DOMAIN_NAME = "www.team2.4516.cs.wpi.edu.";
-    private final String      switchId3   = "76:c1:48:b9:5a:4d";
-    private final String      switchId2   = "ee:c6:65:ac:f6:4a";
-    private final IPv4Address switch3Ip   = IPv4Address.of("10.45.2.3");
-    private final IPv4Address switch2Ip   = IPv4Address.of("10.45.2.2");
-    private final int         DNS_PORT    = 53;
+    private static Pattern switchIPPattern = Pattern.compile("/([0-9.]+):[0-9]+");
+    private final  String  DOMAIN_NAME     = "www.team2.4516.cs.wpi.edu.";
+    private final  int     DNS_PORT        = 53;
+    private final  String  DNS_SWITCH      = "10.45.2.2";
+    private final  String  NAT_SWITCH      = "10.45.2.1";
+    private final String SERVER_CLUSTER_SWITCH = "10.45.2.3";
     protected IFloodlightProviderService floodlightProvider;
     protected IOFSwitchService           switchService;
     private   List<IPv4Address>          adminAddresses;
     private   HashSet<IPv4Address>       acceptedAddresses;
-    private   List<IPv4Address>          availableAddresses;
-    private boolean switch2SSHEnabled = false;
-    private boolean switch3SSHEnabled = false;
-    
+    private   HashMap<String, DatapathId>   switches;
+    private HashMap<String, String> switchNames;
+    private   List<IPv4Address>          serverAddresses;
     
     @Override
     public String getName() {
@@ -59,78 +60,101 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
     
     @Override
     public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
-        Ethernet ethernet = getEthernet(cntx);
-        IPacket packet = ethernet.getPayload();
-        if (isNotIPv4Packet(ethernet, packet)) return Command.CONTINUE;
-        IPv4 iPv4 = (IPv4) packet;
         switch (msg.getType()) {
-            case PACKET_OUT:
-                
-                break;
             case PACKET_IN:
-                if (!switch2SSHEnabled) enabledSwitch2SSh();
-                if (!switch3SSHEnabled) enabledSwitch3SSh();
-                
-                if (acceptedAddresses.contains(iPv4.getDestinationAddress()) && acceptedAddresses.contains(iPv4.getSourceAddress())) {
-                    if (iPv4.getProtocol().equals(IpProtocol.UDP)) {
-                        UDP udp = (UDP) iPv4.getPayload();
-                        if (udp.getSourcePort().getPort() == DNS_PORT) {
-                            IPv4Address serverAddr = getRandomServerAddr();
-                            DNSResponse modifiedDNSReponse = modifyDNSReponse(udp, iPv4, ethernet, DOMAIN_NAME, serverAddr);
-                            Optional<ResourceRecord> record = findRecordFor(DOMAIN_NAME, modifiedDNSReponse);
-                            if (record.isPresent()) {
-                                int ttl = record.get().getTtl();
-                                permitTrafficToServer(iPv4, serverAddr, ttl);
-                            }
-                        }
-                    }
-                    sendOutPacket(sw, ethernet);
-                }
-                
-                break;
+                return processPacket(sw, cntx);
             default:
                 break;
         }
         return Command.CONTINUE;
     }
     
+    private Command processPacket(IOFSwitch sw, FloodlightContext cntx) {
+        String switchIp = getSwitchIp(sw);
+        Ethernet ethernet = getEthernet(cntx);
+        if (!switches.containsKey(switchIp)) {
+            DatapathId switchId = sw.getId();
+            switches.put(switchIp, switchId);
+            enabledSSh(switchId, IPv4Address.of(switchIp));
+        }
+    
+        IPacket packet = ethernet.getPayload();
+        IPv4 iPv4;
+        switch (switchIp) {
+            case DNS_SWITCH:
+                return processDNSSwitchPacket(sw, ethernet);
+            case NAT_SWITCH:
+                if (isNotIPv4Packet(ethernet, packet)) {
+                    sendOutPacket(sw, ethernet);
+                    return Command.STOP;
+                }
+                
+                iPv4 = (IPv4) packet;
+                if (!isAuthorizedClient(iPv4)) return Command.STOP;
+                log(switchIp, String.format("receives packet from %s[%s] to %s[%s]", iPv4.getSourceAddress(), ethernet.getSourceMACAddress(),iPv4.getDestinationAddress(), ethernet.getDestinationMACAddress()));
+                sendOutPacket(sw, ethernet);
+                return Command.STOP;
+            case SERVER_CLUSTER_SWITCH:
+                return Command.STOP;
+        }
+        return Command.STOP;
+    }
+    
+    private void log(String switchIp, String msg) {
+        System.out.printf("GATEWAY CONTROLLER [%s] %s\n", switchNames.getOrDefault(switchIp, String.format("SWITCH %s", switchIp)), msg);
+    }
+    
+    private Command processDNSSwitchPacket(IOFSwitch sw, Ethernet ethernet) {
+        IPacket packet = ethernet.getPayload();
+        if (isNotIPv4Packet(ethernet, packet)) {
+            sendOutPacket(sw, ethernet);
+            return Command.CONTINUE;
+        }
+        IPv4 iPv4 = (IPv4) packet;
+        if (!isAuthorizedClient(iPv4)) return Command.STOP;
+        
+        if (iPv4.getProtocol().equals(IpProtocol.UDP)) {
+            UDP udp = (UDP) iPv4.getPayload();
+            if (udp.getSourcePort().getPort() == DNS_PORT) {
+                IPv4Address serverAddr = getRandomServerAddr();
+                DNSResponse modifiedDNSResponse = modifyDNSReponse(udp, iPv4, ethernet, DOMAIN_NAME, serverAddr);
+                Optional<ResourceRecord> record = findRecordFor(DOMAIN_NAME, modifiedDNSResponse);
+                if (record.isPresent() && switches.containsKey(SERVER_CLUSTER_SWITCH)) {
+                    int ttl = record.get().getTtl();
+                    addTunnel(switches.get(SERVER_CLUSTER_SWITCH).toString(), iPv4.getDestinationAddress(), serverAddr, ttl);
+                }
+            }
+        }
+        sendOutPacket(sw, ethernet);
+        return Command.STOP;
+    }
+    
+    private boolean isAuthorizedClient(IPv4 iPv4) {
+        IPv4Address src = iPv4.getSourceAddress(), dst = iPv4.getDestinationAddress();
+        return (acceptedAddresses.contains(src) || serverAddresses.contains(src)) && (acceptedAddresses.contains(dst) || serverAddresses.contains(dst));
+    }
+    
+    
+    private String getSwitchIp(IOFSwitch sw) {
+        Matcher switchIPMatcher = switchIPPattern.matcher(sw.getInetAddress().toString());
+        switchIPMatcher.find();
+        return switchIPMatcher.group(1);
+    }
+    
     private Optional<ResourceRecord> findRecordFor(String domainName, DNSResponse modifiedDNSReponse) {
         return modifiedDNSReponse.getRecords().stream().filter(resourceRecord -> resourceRecord.getName().equals(domainName)).findFirst();
     }
     
-    private void permitTrafficToServer(IPv4 iPv4, IPv4Address serverAddr, int ttl) {
-        IOFSwitch sw3 = switchService.getSwitch(DatapathId.of(switchId3));
-        if (sw3 == null) return;
-        addTunnel(sw3.getId().toString(), iPv4.getDestinationAddress(), serverAddr, ttl);
-    }
-    
     private IPv4Address getRandomServerAddr() {
         Random random = new Random();
-        int addrIndex = random.nextInt(availableAddresses.size());
-        return availableAddresses.get(addrIndex);
+        int addrIndex = random.nextInt(serverAddresses.size());
+        return serverAddresses.get(addrIndex);
     }
     
-    private boolean enabledSSh(String switchId, IPv4Address switchIp) {
-        IOFSwitch sw = switchService.getSwitch(DatapathId.of(switchId));
-        if (sw == null) return false;
+    private void enabledSSh(DatapathId switchId, IPv4Address switchIp) {
         for (IPv4Address adminAddress : adminAddresses)
-            addTunnel(switchId, adminAddress, switchIp, 3600);
-        
-        return true;
-    }
-    
-    private void enabledSwitch2SSh() {
-        if (enabledSSh(switchId2, switch2Ip)) {
-            switch2SSHEnabled = true;
-            System.out.println("SSH enabled for switch 2");
-        }
-    }
-    
-    private void enabledSwitch3SSh() {
-        if (enabledSSh(switchId3, switch3Ip)) {
-            switch3SSHEnabled = true;
-            System.out.println("SSH enabled for switch 3");
-        }
+            addTunnel(switchId.toString(), adminAddress, switchIp, 3600);
+        log(switchIp.toString(), String.format("enabled SSH for %s", adminAddresses));
     }
     
     private void addTunnel(String switchId, IPv4Address clientIp, IPv4Address serverIp, int ttl) {
@@ -169,18 +193,6 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
         instList.add(applyActions);
         OFFlowAdd flowAdd = factory.buildFlowAdd().setHardTimeout(ttl).setPriority(100).setMatch(match).setInstructions(instList).build();
         sw.write(flowAdd);
-    }
-    
-    /**
-     * Log a given packet to standard output
-     *
-     * @param message  The additional message
-     * @param ethernet The ethernet
-     * @param from     The source IP address of the packet
-     * @param to       The destination IP address of the packet
-     */
-    private void logPacket(String message, Ethernet ethernet, IPv4Address from, IPv4Address to) {
-        System.out.printf("[%S] %s from %s(%s) to %s(%s)\n", getName(), message, from, ethernet.getSourceMACAddress(), to, ethernet.getDestinationMACAddress());
     }
     
     /**
@@ -261,10 +273,15 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
         acceptedAddresses.add(IPv4Address.of("10.45.2.2"));
         acceptedAddresses.add(IPv4Address.of("10.45.2.3"));
         acceptedAddresses.add(IPv4Address.of("10.45.2.4"));
-        availableAddresses = generateAllAvaAddresses();
+        serverAddresses = generateAllAvaAddresses();
         adminAddresses = new ArrayList<>();
         adminAddresses.add(IPv4Address.of("10.10.152.59"));
         adminAddresses.add(IPv4Address.of("10.10.152.151"));
+        switches = new HashMap<>();
+        switchNames = new HashMap<>();
+        switchNames.put("10.45.2.1", "NAT SWITCH");
+        switchNames.put("10.45.2.2", "DNS SWITCH");
+        switchNames.put("10.45.2.3", "SERVER CLUSTER SWITCH");
     }
     
     @Override
