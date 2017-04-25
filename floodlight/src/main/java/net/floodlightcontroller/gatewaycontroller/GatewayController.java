@@ -11,10 +11,8 @@ import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.gatewaycontroller.dns.DNSResponse;
 import net.floodlightcontroller.gatewaycontroller.dns.ResourceRecord;
-import net.floodlightcontroller.packet.Ethernet;
-import net.floodlightcontroller.packet.IPacket;
-import net.floodlightcontroller.packet.IPv4;
-import net.floodlightcontroller.packet.UDP;
+import net.floodlightcontroller.gatewaycontroller.dns.TCPConnection;
+import net.floodlightcontroller.packet.*;
 import org.projectfloodlight.openflow.protocol.*;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
 import org.projectfloodlight.openflow.protocol.action.OFActionOutput;
@@ -30,6 +28,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static net.floodlightcontroller.gatewaycontroller.dns.DNSResponse.modifyDNSReponse;
+import static net.floodlightcontroller.gatewaycontroller.dns.TCPFlags.*;
 
 /**
  * This class implements a gateway controller as a floodlight module
@@ -39,19 +38,24 @@ import static net.floodlightcontroller.gatewaycontroller.dns.DNSResponse.modifyD
  * @version April 13, 2017
  */
 public class GatewayController implements IFloodlightModule, IOFMessageListener {
-    private static Pattern switchIPPattern = Pattern.compile("/([0-9.]+):[0-9]+");
-    private final  String  DOMAIN_NAME     = "www.team2.4516.cs.wpi.edu.";
-    private final  int     DNS_PORT        = 53;
-    private final  String  DNS_SWITCH      = "10.45.2.2";
-    private final  String  NAT_SWITCH      = "10.45.2.1";
-    private final String SERVER_CLUSTER_SWITCH = "10.45.2.3";
-    protected IFloodlightProviderService floodlightProvider;
-    protected IOFSwitchService           switchService;
-    private   List<IPv4Address>          adminAddresses;
-    private   HashSet<IPv4Address>       acceptedAddresses;
-    private   HashMap<String, DatapathId>   switches;
-    private HashMap<String, String> switchNames;
-    private   List<IPv4Address>          serverAddresses;
+    private static Pattern     switchIPPattern       = Pattern.compile("/([0-9.]+):[0-9]+");
+    private final  String      DOMAIN_NAME           = "www.team2.4516.cs.wpi.edu.";
+    private final  int         DNS_PORT              = 53;
+    private final  int         SSH_TTL               = 3600;
+    private final  IPv4Address clientOriginalIp      = IPv4Address.of("10.45.2.1");
+    private final  String      DNS_SWITCH            = "10.45.2.2";
+    private final  String      NAT_SWITCH            = "10.45.2.1";
+    private final  String      SERVER_CLUSTER_SWITCH = "10.45.2.3";
+    protected IFloodlightProviderService  floodlightProvider;
+    protected IOFSwitchService            switchService;
+    private   List<IPv4Address>           adminAddresses;
+    private   HashSet<IPv4Address>        acceptedAddresses;
+    private   HashMap<String, DatapathId> switches;
+    private   HashMap<String, String>     switchNames;
+    private   List<IPv4Address>           serverAddresses;
+    private   List<IPv4Address>           clientAddresses;
+    private List<IPv4Address> allocationClientIp;
+    private   HashMap<TCPConnection, TCPConnectionState>      tcpConnections;
     
     @Override
     public String getName() {
@@ -77,7 +81,7 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
             switches.put(switchIp, switchId);
             enabledSSh(switchId, IPv4Address.of(switchIp));
         }
-    
+        
         IPacket packet = ethernet.getPayload();
         IPv4 iPv4;
         switch (switchIp) {
@@ -91,7 +95,74 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
                 
                 iPv4 = (IPv4) packet;
                 if (!isAuthorizedClient(iPv4)) return Command.STOP;
-                log(switchIp, String.format("receives packet from %s[%s] to %s[%s]", iPv4.getSourceAddress(), ethernet.getSourceMACAddress(),iPv4.getDestinationAddress(), ethernet.getDestinationMACAddress()));
+//                log(switchIp, String.format("receives packet from %s[%s] to %s[%s]", iPv4.getSourceAddress(), ethernet.getSourceMACAddress(), iPv4.getDestinationAddress(), ethernet
+//                        .getDestinationMACAddress()));
+                if (iPv4.getProtocol() == IpProtocol.TCP) {
+                    TCP tcp = (TCP) iPv4.getPayload();
+                    
+                    short flags = tcp.getFlags();
+                    TCPConnection connection;
+                    TCPConnectionState connectionState;
+                    switch (flags) {
+                        case SYN:
+                            System.out.println("SYN");
+                            if(!iPv4.getSourceAddress().equals(clientOriginalIp)) return Command.STOP;
+                            System.out.println("Client initiates TCP connection");
+                            connection = TCPConnection.makeTCPConnection(tcp, iPv4);
+                            connectionState = new TCPConnectionState();
+                            connectionState.synforward();
+                            tcpConnections.put(connection, connectionState);
+                            break;
+                        case SYN_ACK:
+                            System.out.println("SYN, ACK");
+                            if(!iPv4.getDestinationAddress().equals(clientOriginalIp)) return Command.STOP;
+                            connection = TCPConnection.makeReverseTCPConnection(tcp, iPv4);
+                            if(!tcpConnections.containsKey(connection)) return Command.STOP;
+                            connectionState = tcpConnections.get(connection);
+                            if(connectionState.initiatedConnection()) connectionState.synAckBackward();
+                            break;
+                        case ACK:
+                            System.out.println("ACK");
+                            if(iPv4.getSourceAddress().equals(clientOriginalIp)) connection = TCPConnection.makeTCPConnection(tcp, iPv4);
+                            else connection = TCPConnection.makeReverseTCPConnection(tcp, iPv4);
+                            if(!tcpConnections.containsKey(connection)) return Command.STOP;
+                            connectionState = tcpConnections.get(connection);
+                            if(!connectionState.handShaked()) return Command.STOP;
+                            if(iPv4.getSourceAddress().equals(clientOriginalIp)) {
+                                if(connectionState.terminated()) {
+                                    System.out.println("Connection terminated");
+                                    tcpConnections.remove(connection);
+                                } else {
+                                    if (connectionState.isNewConnection()) System.out.println("New TCP connection established");
+                                    else System.out.println("Client send a packet to server");
+                                    connectionState.ackFoward();
+                                }
+                            } else if(iPv4.getDestinationAddress().equals(clientOriginalIp)){
+                                System.out.println("Server send a packet to client");
+                                connectionState.ackBackward();
+                            }
+                            break;
+                        case FIN_ACK:
+                            System.out.println("FIN ACK");
+                            if(iPv4.getSourceAddress().equals(clientOriginalIp))
+                                connection = TCPConnection.makeTCPConnection(tcp, iPv4);
+                            else connection = TCPConnection.makeReverseTCPConnection(tcp, iPv4);
+                            if(!tcpConnections.containsKey(connection)) return Command.STOP;
+                            connectionState = tcpConnections.get(connection);
+                            if(!connectionState.handShaked()) return Command.STOP;
+                            if(iPv4.getSourceAddress().equals(clientOriginalIp)) {
+                                if(connectionState.terminating()) return Command.STOP;
+                                System.out.println("Client request to terminate TCP connection");
+                                connectionState.finAckForward();
+                            } else if(iPv4.getDestinationAddress().equals(clientOriginalIp)){
+                                if(!connectionState.terminating()) return Command.STOP;
+                                System.out.println("Server permit terminate TCP connection");
+                                connectionState.finAckBackward();
+                            }
+                            break;
+                    }
+                }
+                
                 sendOutPacket(sw, ethernet);
                 return Command.STOP;
             case SERVER_CLUSTER_SWITCH:
@@ -153,7 +224,7 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
     
     private void enabledSSh(DatapathId switchId, IPv4Address switchIp) {
         for (IPv4Address adminAddress : adminAddresses)
-            addTunnel(switchId.toString(), adminAddress, switchIp, 3600);
+            addTunnel(switchId.toString(), adminAddress, switchIp, SSH_TTL);
         log(switchIp.toString(), String.format("enabled SSH for %s", adminAddresses));
     }
     
@@ -170,17 +241,22 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
     
     private void addFlowEntry(IOFSwitch sw, EthType ethType, IPv4Address srcIp, IPv4Address destIp, OFPort inPort, OFPort outPort, int ttl) {
         OFFactory factory = sw.getOFFactory();
-        Match match = makeBuilder(ethType, factory, srcIp, destIp, inPort).build();
+        Match match = makeMatchBuilder(ethType, factory, srcIp, destIp, inPort).build();
         addFlowEntry(match, sw, factory, outPort, ttl);
     }
     
     
-    private Match.Builder makeBuilder(EthType ethType, OFFactory factory, IPv4Address srcIp, IPv4Address destIp, OFPort inPort) {
+    private Match.Builder makeMatchBuilder(EthType ethType, OFFactory factory, IPv4Address srcIp, IPv4Address destIp, OFPort inPort) {
         if (ethType.equals(EthType.ARP))
             return factory.buildMatch().setExact(MatchField.ETH_TYPE, EthType.ARP).setExact(MatchField.ARP_SPA, srcIp).setExact(MatchField.ARP_TPA, destIp).setExact(MatchField.IN_PORT, inPort);
         else if (ethType.equals(EthType.IPv4))
             return factory.buildMatch().setExact(MatchField.ETH_TYPE, EthType.IPv4).setExact(MatchField.IPV4_SRC, srcIp).setExact(MatchField.IPV4_DST, destIp).setExact(MatchField.IN_PORT, inPort);
         return factory.buildMatch();
+    }
+    
+    private Match.Builder makeTCPMatchBuilder(OFFactory factory, IPv4Address srcIp, IPv4Address destIp, int srcPort, int dstPort, U16 tcpFlags) {
+        return factory.buildMatch().setExact(MatchField.ETH_TYPE, EthType.IPv4).setExact(MatchField.IPV4_SRC, srcIp).setExact(MatchField.IPV4_DST, destIp).setExact(MatchField.IP_PROTO, IpProtocol
+                .TCP).setExact(MatchField.TCP_SRC, TransportPort.of(srcPort)).setExact(MatchField.TCP_DST, TransportPort.of(dstPort)).setExact(MatchField.TCP_FLAGS, tcpFlags);
     }
     
     private void addFlowEntry(Match match, IOFSwitch sw, OFFactory factory, OFPort outPort, int ttl) {
@@ -257,9 +333,17 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
         return l;
     }
     
-    private List<IPv4Address> generateAllAvaAddresses() {
+    private List<IPv4Address> generateServerAddresses() {
+        return generateAddresses(129, 255);
+    }
+    
+    private List<IPv4Address> generateClientAddresses() {
+        return generateAddresses(48, 63);
+    }
+    
+    private List<IPv4Address> generateAddresses(int from, int to) {
         List<IPv4Address> addresses = new ArrayList<>();
-        for (int i = 129; i < 255; i++)
+        for (int i = from; i < to; i++)
             addresses.add(IPv4Address.of(String.format("10.45.2.%d", i)));
         return addresses;
     }
@@ -273,7 +357,8 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
         acceptedAddresses.add(IPv4Address.of("10.45.2.2"));
         acceptedAddresses.add(IPv4Address.of("10.45.2.3"));
         acceptedAddresses.add(IPv4Address.of("10.45.2.4"));
-        serverAddresses = generateAllAvaAddresses();
+        serverAddresses = generateServerAddresses();
+        clientAddresses = generateClientAddresses();
         adminAddresses = new ArrayList<>();
         adminAddresses.add(IPv4Address.of("10.10.152.59"));
         adminAddresses.add(IPv4Address.of("10.10.152.151"));
@@ -282,6 +367,8 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
         switchNames.put("10.45.2.1", "NAT SWITCH");
         switchNames.put("10.45.2.2", "DNS SWITCH");
         switchNames.put("10.45.2.3", "SERVER CLUSTER SWITCH");
+        tcpConnections = new HashMap<>();
+        allocationClientIp = new LinkedList<>();
     }
     
     @Override

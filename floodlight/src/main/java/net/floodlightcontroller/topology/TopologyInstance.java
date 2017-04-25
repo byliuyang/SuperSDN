@@ -87,7 +87,7 @@ public class TopologyInstance {
             Set<NodePortTuple> portsBlocked,
             Map<NodePortTuple, Set<Link>> linksNonBcastNonTunnel,
             Set<NodePortTuple> portsWithMoreThanTwoLinks,
-            Set<NodePortTuple> portsTunnel, 
+            Set<NodePortTuple> portsTunnel,
             Map<NodePortTuple, Set<Link>> links,
             Map<DatapathId, Set<OFPort>> portsPerSwitch,
             Map<NodePortTuple, Set<Link>> linksExternal) {
@@ -141,7 +141,7 @@ public class TopologyInstance {
 
     protected void compute() {
         /*
-         * Step 1: Compute clusters ignoring ports with > 2 links and 
+         * Step 1: Compute clusters ignoring ports with > 2 links and
          * blocked links.
          */
         identifyClusters();
@@ -152,11 +152,11 @@ public class TopologyInstance {
          */
         identifyIntraClusterLinks();
 
-        /* 
+        /*
          * Step 3: Compute the archipelagos. (Def: group of conneccted clusters)
-         * Each archipelago will have its own broadcast tree, chosen by running 
-         * dijkstra's algorithm from the archipelago ID switch (lowest switch 
-         * DPID). We need a broadcast tree per archipelago since each 
+         * Each archipelago will have its own broadcast tree, chosen by running
+         * dijkstra's algorithm from the archipelago ID switch (lowest switch
+         * DPID). We need a broadcast tree per archipelago since each
          * archipelago is by definition isolated from all other archipelagos.
          */
         identifyArchipelagos();
@@ -164,7 +164,7 @@ public class TopologyInstance {
         /*
          * Step 4: Use Yens algorithm to permute through each node combination
          * within each archipelago and compute multiple paths. The shortest
-         * path located (i.e. first run of dijkstra's algorithm) will be used 
+         * path located (i.e. first run of dijkstra's algorithm) will be used
          * as the broadcast tree for the archipelago.
          */
         computeOrderedPaths();
@@ -186,7 +186,7 @@ public class TopologyInstance {
     /*
      * Checks if OF port is edge port
      */
-    public boolean isEdge(DatapathId sw, OFPort portId) { 
+    public boolean isEdge(DatapathId sw, OFPort portId) {
         NodePortTuple np = new NodePortTuple(sw, portId);
         if (links.get(np) == null || links.get(np).isEmpty()) {
             return true;
@@ -194,7 +194,7 @@ public class TopologyInstance {
         else {
             return false;
         }
-    }   
+    }
 
     /*
      * Returns broadcast ports for the given DatapathId
@@ -219,7 +219,7 @@ public class TopologyInstance {
         log.debug("Broadcast Ports Per Node (!!): {}", portsBroadcastPerSwitch);
         log.debug("3+ Link Ports: {}", portsWithMoreThanTwoLinks);
         log.debug("Archipelagos: {}", archipelagos);
-        log.debug("-----------------------------------------------");  
+        log.debug("-----------------------------------------------");
     }
 
     private void identifyIntraClusterLinks() {
@@ -355,8 +355,8 @@ public class TopologyInstance {
                     } else if (!dstDFS.isVisited()) {
                         // make a DFS visit
                         currIndex = dfsTraverse(
-                                currDFS.getDfsIndex(), 
-                                currIndex, dstSw, 
+                                currDFS.getDfsIndex(),
+                                currIndex, dstSw,
                                 dfsList, myCurrSet);
 
                         if (currIndex < 0) return -1;
@@ -690,7 +690,7 @@ public class TopologyInstance {
                     if (link == null) {
                         continue;
                     }
-                    if ((int)link.getLatency().getValue() < 0 || 
+                    if ((int)link.getLatency().getValue() < 0 ||
                             (int)link.getLatency().getValue() > MAX_LINK_WEIGHT) {
                         linkCost.put(link, MAX_LINK_WEIGHT);
                     } else {
@@ -771,7 +771,7 @@ public class TopologyInstance {
 
     /*
      * Calculates and stores n possible paths  using Yen's algorithm,
-     * looping through every switch. These lists of routes are stored 
+     * looping through every switch. These lists of routes are stored
      * in the pathcache.
      */
     private void computeOrderedPaths() {
@@ -1259,7 +1259,7 @@ public class TopologyInstance {
 
     public DatapathId getClusterId(DatapathId switchId) {
         Cluster c = clusterFromSwitch.get(switchId);
-        if (c != null) { 
+        if (c != null) {
             return c.getId();
         }
         return switchId;
@@ -1299,7 +1299,7 @@ public class TopologyInstance {
      * Takes finiteBroadcastTree into account to prevent loops in the network
      */
     public boolean isBroadcastAllowedOnSwitchPort(DatapathId sw, OFPort portId) {
-        if (!isEdge(sw, portId)){       
+        if (!isEdge(sw, portId)){
             NodePortTuple npt = new NodePortTuple(sw, portId);
             if (portsBroadcastAll.contains(npt))
                 return true;
@@ -1361,12 +1361,12 @@ public class TopologyInstance {
         if (portsBroadcastPerSwitch.containsKey(npt.getNodeId())) {
             portsBroadcastPerSwitch.get(npt.getNodeId()).add(npt.getPortId());
         } else {
-            portsBroadcastPerSwitch.put(npt.getNodeId(), 
+            portsBroadcastPerSwitch.put(npt.getNodeId(),
                     new HashSet<OFPort>(Arrays.asList(npt.getPortId())));
         }
     }
 
-    private void computeBroadcastPortsPerArchipelago() {      
+    private void computeBroadcastPortsPerArchipelago() {
         Set<NodePortTuple> s;
         for (Archipelago a : archipelagos) {
             s = new HashSet<NodePortTuple>();
@@ -1430,4 +1430,4 @@ public class TopologyInstance {
     public Set<DatapathId> getArchipelagoIds() {
         return archipelagos.stream().map(a -> a.getId()).collect(Collectors.toSet());
     }
-} 
+}

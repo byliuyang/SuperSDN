@@ -112,7 +112,7 @@ public interface ILinkDiscovery {
         public OFPort getDstPort() {
             return dstPort;
         }
-        
+
         public U64 getLatency() {
         	return latency;
         }
@@ -132,7 +132,7 @@ public interface ILinkDiscovery {
         public void setOperation(UpdateOperation operation) {
             this.operation = operation;
         }
-        
+
         @Override
         public String toString() {
             switch (operation) {
@@ -170,19 +170,19 @@ public interface ILinkDiscovery {
         	public String toString() {
         		return "invalid";
         	}
-        }, 
+        },
         DIRECT_LINK{
         	@Override
         	public String toString() {
         		return "internal";
         	}
-        }, 
+        },
         MULTIHOP_LINK {
         	@Override
         	public String toString() {
         		return "external";
         	}
-        }, 
+        },
         TUNNEL {
         	@Override
         	public String toString() {

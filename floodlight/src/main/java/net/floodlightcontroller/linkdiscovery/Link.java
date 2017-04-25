@@ -1,7 +1,7 @@
 /**
-*    Copyright 2011, Big Switch Networks, Inc. 
+*    Copyright 2011, Big Switch Networks, Inc.
 *    Originally created by David Erickson, Stanford University
-* 
+*
 *    Licensed under the Apache License, Version 2.0 (the "License"); you may
 *    not use this file except in compliance with the License. You may obtain
 *    a copy of the License at
@@ -32,7 +32,7 @@ public class Link implements Comparable<Link> {
     private DatapathId dst;
     @JsonProperty("dst-port")
     private OFPort dstPort;
-    @JsonProperty("latency") 
+    @JsonProperty("latency")
     private U64 latency; /* we intentionally exclude the latency from hashcode and equals */
 
     public Link(DatapathId srcId, OFPort srcPort, DatapathId dstId, OFPort dstPort, U64 latency) {
@@ -66,7 +66,7 @@ public class Link implements Comparable<Link> {
     public OFPort getDstPort() {
         return dstPort;
     }
-    
+
     public U64 getLatency() {
     	return latency;
     }
@@ -86,7 +86,7 @@ public class Link implements Comparable<Link> {
     public void setDstPort(OFPort dstPort) {
         this.dstPort = dstPort;
     }
-    
+
     public void setLatency(U64 latency) {
     	this.latency = latency;
     }
@@ -125,7 +125,7 @@ public class Link implements Comparable<Link> {
 
     @Override
     public String toString() {
-        return "Link [src=" + this.src.toString() 
+        return "Link [src=" + this.src.toString()
                 + " outPort="
                 + srcPort.toString()
                 + ", dst=" + this.dst.toString()
@@ -135,7 +135,7 @@ public class Link implements Comparable<Link> {
                 + String.valueOf(latency.getValue())
                 + "]";
     }
-    
+
     public String toKeyString() {
     	return (this.src.toString() + "|" +
     			this.srcPort.toString() + "|" +
@@ -149,15 +149,15 @@ public class Link implements Comparable<Link> {
         int srcComp = this.getSrc().compareTo(a.getSrc());
         if (srcComp != 0)
             return srcComp;
-        
+
         int srcPortComp = this.getSrcPort().compareTo(a.getSrcPort());
         if (srcPortComp != 0)
             return srcPortComp;
-            
+
         int dstComp = this.getDst().compareTo(a.getDst());
         if (dstComp != 0)
             return dstComp;
-        
+
         return this.getDstPort().compareTo(a.getDstPort());
     }
 }

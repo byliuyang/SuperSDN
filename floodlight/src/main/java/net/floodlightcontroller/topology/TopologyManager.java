@@ -61,7 +61,7 @@ import java.util.concurrent.TimeUnit;
  * of the network graph, as well as implementing tools for finding routes
  * through the topology.
  */
-public class TopologyManager implements IFloodlightModule, ITopologyService, 
+public class TopologyManager implements IFloodlightModule, ITopologyService,
 ITopologyManagerBackend, ILinkDiscoveryListener, IOFMessageListener {
     private static Logger log = LoggerFactory.getLogger(TopologyManager.class);
     public static final String MODULE_NAME = "topology";
@@ -175,7 +175,7 @@ ITopologyManagerBackend, ILinkDiscoveryListener, IOFMessageListener {
         public void run() {
             try {
                 if (ldUpdates.peek() != null) { /* must check here, otherwise will run every interval */
-                    updateTopology("link-discovery-updates", false);
+//                    updateTopology("link-discovery-updates", false);
                 }
                 handleMiscellaneousPeriodicEvents();
             }
@@ -299,8 +299,8 @@ ITopologyManagerBackend, ILinkDiscoveryListener, IOFMessageListener {
         // Check whether the port is a physical port. We should not learn
         // attachment points on "special" ports. Exclude LOCAL, where devices
         // might live if they are on the switch OS itself
-        if (port.equals(OFPort.ALL) || 
-                port.equals(OFPort.CONTROLLER) || 
+        if (port.equals(OFPort.ALL) ||
+                port.equals(OFPort.CONTROLLER) ||
                 port.equals(OFPort.ANY) ||
                 port.equals(OFPort.FLOOD) ||
                 port.equals(OFPort.ZERO) ||
@@ -385,7 +385,7 @@ ITopologyManagerBackend, ILinkDiscoveryListener, IOFMessageListener {
     ////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////
 
-    /** 
+    /**
      * Get all the ports on the target switch (targetSw) on which a
      * broadcast packet must be sent from a host whose attachment point
      * is on switch port (src, srcPort).
@@ -634,14 +634,14 @@ ITopologyManagerBackend, ILinkDiscoveryListener, IOFMessageListener {
                         pathMetric = PATH_METRIC.LINK_SPEED;
                         break;
                     default:
-                        log.error("Invalid routing metric {}. Using default {}", 
+                        log.error("Invalid routing metric {}. Using default {}",
                                 metric, pathMetric.getMetricName());
                         break;
                     }
                 }
                 log.info("Path metrics set to {}", pathMetric);
 
-                String maxroutes = configOptions.get("maxPathsToCompute") != null 
+                String maxroutes = configOptions.get("maxPathsToCompute") != null
                         ? configOptions.get("maxPathsToCompute").trim() : null;
                 if (maxroutes != null) {
                     try {
@@ -996,7 +996,7 @@ ITopologyManagerBackend, ILinkDiscoveryListener, IOFMessageListener {
                 removeLinkFromStructure(openflowLinks, link);
             }
         }
-        //switchPorts contains only ports that are part of links. Calculation of broadcast ports needs set of all ports. 
+        //switchPorts contains only ports that are part of links. Calculation of broadcast ports needs set of all ports.
         Map<DatapathId, Set<OFPort>> allPorts = new HashMap<DatapathId, Set<OFPort>>();;
         for (DatapathId sw : switchPorts.keySet()){
             allPorts.put(sw, this.getPorts(sw));
@@ -1140,12 +1140,12 @@ ITopologyManagerBackend, ILinkDiscoveryListener, IOFMessageListener {
 
         if (s.get(n1) == null) {
             s.put(n1, new HashSet<Link>());
-        } 
+        }
         if (s.get(n2) == null) {
             s.put(n2, new HashSet<Link>());
         }
 
-        /* 
+        /*
          * Since we don't include latency in .equals(), we need
          * to explicitly remove the existing link (if present).
          * Otherwise, new latency values for existing links will
