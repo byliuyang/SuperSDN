@@ -1,6 +1,5 @@
 package net.floodlightcontroller.gatewaycontroller.dns;
 
-import net.floodlightcontroller.packet.IPv4;
 import net.floodlightcontroller.packet.TCP;
 import org.projectfloodlight.openflow.types.IPv4Address;
 
@@ -16,32 +15,38 @@ public class TCPConnection {
     private  int clientPort;
     private  int serverPort;
     
-    public static TCPConnection makeTCPConnection(TCP tcp, IPv4 iPv4) {
+    public static TCPConnection makeTCPConnection(TCP tcp, IPv4Address serverIp) {
         TCPConnection connection = new TCPConnection();
-        connection.clientAddr = iPv4.getSourceAddress();
-        connection.serverAddr = iPv4.getDestinationAddress();
+        connection.serverAddr = serverIp;
         connection.clientPort = tcp.getSourcePort().getPort();
         connection.serverPort = tcp.getDestinationPort().getPort();
         return connection;
     }
     
-    public static TCPConnection makeReverseTCPConnection(TCP tcp, IPv4 iPv4) {
-        TCPConnection reverseConnection = new TCPConnection();
-        reverseConnection.clientAddr = iPv4.getDestinationAddress();
-        reverseConnection.serverAddr = iPv4.getSourceAddress();
-        reverseConnection.clientPort = tcp.getDestinationPort().getPort();
-        reverseConnection.serverPort = tcp.getSourcePort().getPort();
-        return reverseConnection;
+    public static TCPConnection makeTCPConnection(TCP tcp, IPv4Address src, IPv4Address dst) {
+        TCPConnection connection = new TCPConnection();
+        connection.clientAddr = src;
+        connection.serverAddr = dst;
+        connection.clientPort = tcp.getSourcePort().getPort();
+        connection.serverPort = tcp.getDestinationPort().getPort();
+        return connection;
     }
     
+    public static TCPConnection makeReverseTCPConnection(TCP tcp, IPv4Address src, IPv4Address dst) {
+        TCPConnection connection = new TCPConnection();
+        connection.clientAddr = dst;
+        connection.serverAddr = src;
+        connection.clientPort = tcp.getDestinationPort().getPort();
+        connection.serverPort = tcp.getSourcePort().getPort();
+        return connection;
+    }
     
-    public static TCPConnection makeReverseTCPConnection(TCPConnection connection) {
-        TCPConnection reverseConnection = new TCPConnection();
-        connection.clientAddr = connection.serverAddr;
-        connection.serverAddr = connection.clientAddr;
-        connection.clientPort = connection.serverPort;
-        connection.serverPort = connection.clientPort;
-        return reverseConnection;
+    public void setClientAddr(IPv4Address clientAddr) {
+        this.clientAddr = clientAddr;
+    }
+    
+    public IPv4Address getServerAddr() {
+        return serverAddr;
     }
     
     @Override
@@ -53,14 +58,12 @@ public class TCPConnection {
         
         if (clientPort != that.clientPort) return false;
         if (serverPort != that.serverPort) return false;
-        if (!clientAddr.equals(that.clientAddr)) return false;
         return serverAddr.equals(that.serverAddr);
     }
     
     @Override
     public int hashCode() {
-        int result = clientAddr.hashCode();
-        result = 31 * result + serverAddr.hashCode();
+        int result = serverAddr.hashCode();
         result = 31 * result + clientPort;
         result = 31 * result + serverPort;
         return result;
@@ -68,6 +71,6 @@ public class TCPConnection {
     
     @Override
     public String toString() {
-        return "TCPConnection{" + "clientAddr=" + clientAddr + ", serverAddr=" + serverAddr + ", clientPort=" + clientPort + ", serverPort=" + serverPort + '}';
+        return "[TCPConnection]" + " clientAddr:" + clientAddr + " serverAddr:" + serverAddr + " clientPort=" + clientPort + " serverPort=" + serverPort;
     }
 }

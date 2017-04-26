@@ -13,14 +13,18 @@ import net.floodlightcontroller.gatewaycontroller.dns.DNSResponse;
 import net.floodlightcontroller.gatewaycontroller.dns.ResourceRecord;
 import net.floodlightcontroller.gatewaycontroller.dns.TCPConnection;
 import net.floodlightcontroller.packet.*;
+import net.floodlightcontroller.util.FlowModUtils;
 import org.projectfloodlight.openflow.protocol.*;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
 import org.projectfloodlight.openflow.protocol.action.OFActionOutput;
+import org.projectfloodlight.openflow.protocol.action.OFActionSetField;
+import org.projectfloodlight.openflow.protocol.action.OFActions;
 import org.projectfloodlight.openflow.protocol.instruction.OFInstruction;
 import org.projectfloodlight.openflow.protocol.instruction.OFInstructionApplyActions;
 import org.projectfloodlight.openflow.protocol.instruction.OFInstructions;
 import org.projectfloodlight.openflow.protocol.match.Match;
 import org.projectfloodlight.openflow.protocol.match.MatchField;
+import org.projectfloodlight.openflow.protocol.oxm.OFOxms;
 import org.projectfloodlight.openflow.types.*;
 
 import java.util.*;
@@ -46,16 +50,17 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
     private final  String      DNS_SWITCH            = "10.45.2.2";
     private final  String      NAT_SWITCH            = "10.45.2.1";
     private final  String      SERVER_CLUSTER_SWITCH = "10.45.2.3";
-    protected IFloodlightProviderService  floodlightProvider;
-    protected IOFSwitchService            switchService;
-    private   List<IPv4Address>           adminAddresses;
-    private   HashSet<IPv4Address>        acceptedAddresses;
-    private   HashMap<String, DatapathId> switches;
-    private   HashMap<String, String>     switchNames;
-    private   List<IPv4Address>           serverAddresses;
-    private   List<IPv4Address>           clientAddresses;
-    private List<IPv4Address> allocationClientIp;
-    private   HashMap<TCPConnection, TCPConnectionState>      tcpConnections;
+    protected IFloodlightProviderService                 floodlightProvider;
+    protected IOFSwitchService                           switchService;
+    private   List<IPv4Address>                          adminAddresses;
+    private   HashSet<IPv4Address>                       acceptedAddresses;
+    private   HashMap<String, DatapathId>                switches;
+    private   HashMap<String, String>                    switchNames;
+    private   List<IPv4Address>                          serverAddresses;
+    private   List<IPv4Address>                          clientAddresses;
+    private   HashSet<IPv4Address>                       allocatedClientIp;
+    private   HashMap<TCPConnection, TCPConnectionState> tcpConnectionStates;
+    private   HashMap<TCPConnection, IPv4Address>        tcpConnections;
     
     @Override
     public String getName() {
@@ -82,91 +87,102 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
             enabledSSh(switchId, IPv4Address.of(switchIp));
         }
         
-        IPacket packet = ethernet.getPayload();
-        IPv4 iPv4;
         switch (switchIp) {
             case DNS_SWITCH:
                 return processDNSSwitchPacket(sw, ethernet);
             case NAT_SWITCH:
-                if (isNotIPv4Packet(ethernet, packet)) {
-                    sendOutPacket(sw, ethernet);
-                    return Command.STOP;
-                }
-                
-                iPv4 = (IPv4) packet;
-                if (!isAuthorizedClient(iPv4)) return Command.STOP;
-//                log(switchIp, String.format("receives packet from %s[%s] to %s[%s]", iPv4.getSourceAddress(), ethernet.getSourceMACAddress(), iPv4.getDestinationAddress(), ethernet
-//                        .getDestinationMACAddress()));
-                if (iPv4.getProtocol() == IpProtocol.TCP) {
-                    TCP tcp = (TCP) iPv4.getPayload();
-                    
-                    short flags = tcp.getFlags();
-                    TCPConnection connection;
-                    TCPConnectionState connectionState;
-                    switch (flags) {
-                        case SYN:
-                            System.out.println("SYN");
-                            if(!iPv4.getSourceAddress().equals(clientOriginalIp)) return Command.STOP;
-                            System.out.println("Client initiates TCP connection");
-                            connection = TCPConnection.makeTCPConnection(tcp, iPv4);
-                            connectionState = new TCPConnectionState();
-                            connectionState.synforward();
-                            tcpConnections.put(connection, connectionState);
-                            break;
-                        case SYN_ACK:
-                            System.out.println("SYN, ACK");
-                            if(!iPv4.getDestinationAddress().equals(clientOriginalIp)) return Command.STOP;
-                            connection = TCPConnection.makeReverseTCPConnection(tcp, iPv4);
-                            if(!tcpConnections.containsKey(connection)) return Command.STOP;
-                            connectionState = tcpConnections.get(connection);
-                            if(connectionState.initiatedConnection()) connectionState.synAckBackward();
-                            break;
-                        case ACK:
-                            System.out.println("ACK");
-                            if(iPv4.getSourceAddress().equals(clientOriginalIp)) connection = TCPConnection.makeTCPConnection(tcp, iPv4);
-                            else connection = TCPConnection.makeReverseTCPConnection(tcp, iPv4);
-                            if(!tcpConnections.containsKey(connection)) return Command.STOP;
-                            connectionState = tcpConnections.get(connection);
-                            if(!connectionState.handShaked()) return Command.STOP;
-                            if(iPv4.getSourceAddress().equals(clientOriginalIp)) {
-                                if(connectionState.terminated()) {
-                                    System.out.println("Connection terminated");
-                                    tcpConnections.remove(connection);
-                                } else {
-                                    if (connectionState.isNewConnection()) System.out.println("New TCP connection established");
-                                    else System.out.println("Client send a packet to server");
-                                    connectionState.ackFoward();
-                                }
-                            } else if(iPv4.getDestinationAddress().equals(clientOriginalIp)){
-                                System.out.println("Server send a packet to client");
-                                connectionState.ackBackward();
-                            }
-                            break;
-                        case FIN_ACK:
-                            System.out.println("FIN ACK");
-                            if(iPv4.getSourceAddress().equals(clientOriginalIp))
-                                connection = TCPConnection.makeTCPConnection(tcp, iPv4);
-                            else connection = TCPConnection.makeReverseTCPConnection(tcp, iPv4);
-                            if(!tcpConnections.containsKey(connection)) return Command.STOP;
-                            connectionState = tcpConnections.get(connection);
-                            if(!connectionState.handShaked()) return Command.STOP;
-                            if(iPv4.getSourceAddress().equals(clientOriginalIp)) {
-                                if(connectionState.terminating()) return Command.STOP;
-                                System.out.println("Client request to terminate TCP connection");
-                                connectionState.finAckForward();
-                            } else if(iPv4.getDestinationAddress().equals(clientOriginalIp)){
-                                if(!connectionState.terminating()) return Command.STOP;
-                                System.out.println("Server permit terminate TCP connection");
-                                connectionState.finAckBackward();
-                            }
-                            break;
-                    }
-                }
-                
-                sendOutPacket(sw, ethernet);
-                return Command.STOP;
+                return processNATSwitchPacket(sw, ethernet);
             case SERVER_CLUSTER_SWITCH:
                 return Command.STOP;
+        } return Command.STOP;
+    }
+    
+    private Command processNATSwitchPacket(IOFSwitch sw, Ethernet ethernet) {
+        IPacket packet = ethernet.getPayload();
+        IPv4 iPv4;
+        
+        if (isNotIPv4Packet(ethernet, packet)) {
+            sendOutPacket(sw, ethernet);
+            return Command.STOP;
+        }
+    
+        iPv4 = (IPv4) packet;
+        if (iPv4.getDestinationAddress().equals(IPv4Address.of(DNS_SWITCH))) sendOutPacket(sw, ethernet);
+        else if (iPv4.getSourceAddress().equals(IPv4Address.of(DNS_SWITCH))) sendOutPacket(sw, ethernet);
+        if (iPv4.getProtocol() == IpProtocol.TCP) {
+            TCP tcp = (TCP) iPv4.getPayload();
+        
+            short flags = tcp.getFlags();
+            TCPConnection connection;
+            TCPConnectionState connectionState;
+            IPv4Address clientNewIp;
+            IPv4Address serverIp;
+            switch (flags) {
+                case SYN:
+                    if (!iPv4.getSourceAddress().equals(clientOriginalIp)) return Command.STOP;
+                    clientNewIp = allocateClientIp();
+                    connection = TCPConnection.makeTCPConnection(tcp, clientNewIp, iPv4.getDestinationAddress());
+                    System.out.println();
+                    System.out.println("Client initiates " + connection);
+                    if (!tcpConnectionStates.containsKey(connection)) {
+                        allocatedClientIp.add(clientNewIp);
+                        connectionState = new TCPConnectionState();
+                        connectionState.synforward();
+                        tcpConnections.put(connection, clientNewIp);
+                        tcpConnectionStates.put(connection, connectionState);
+                        if (!switches.containsKey(NAT_SWITCH)) return Command.STOP;
+                        serverIp = iPv4.getDestinationAddress();
+                        DatapathId natSwitchId = switches.get(NAT_SWITCH);
+                        System.out.println("Add NAT rules for " + connection);
+                        addTCPTunnel(natSwitchId, clientOriginalIp, clientNewIp, serverIp, tcp.getSourcePort(), tcp.getDestinationPort(), U16.ofRaw(SYN));
+                        addTCPTunnel(natSwitchId, clientOriginalIp, clientNewIp, serverIp, tcp.getSourcePort(), tcp.getDestinationPort(), U16.ofRaw(SYN_ACK));
+                        addTCPTunnel(natSwitchId, clientOriginalIp, clientNewIp, serverIp, tcp.getSourcePort(), tcp.getDestinationPort(), U16.ofRaw(ACK));
+                        addTCPTunnel(natSwitchId, clientOriginalIp, clientNewIp, serverIp, tcp.getSourcePort(), tcp.getDestinationPort(), U16.ofRaw(PUSH_ACK));
+                        OFFactory factory = sw.getOFFactory();
+                        addNATOUTFlowEntry(makeTCPMatchBuilder(factory, OFPort.LOCAL, clientOriginalIp, serverIp, tcp.getSourcePort(), tcp.getDestinationPort(), U16.ofRaw(FIN_ACK)).build(),
+                                           sw, factory, OFPort.of(1), clientNewIp);
+                        iPv4.setSourceAddress(clientNewIp);
+                        iPv4.resetChecksum();
+                        tcp.resetChecksum();
+                        ethernet.setPayload(iPv4);
+                        ethernet.resetChecksum();
+                        sendOutPacket(sw, ethernet);
+                    }
+                    break;
+                case FIN_ACK:
+                    if (allocatedClientIp.contains(iPv4.getDestinationAddress())) connection = TCPConnection.makeReverseTCPConnection(tcp, iPv4.getSourceAddress(), null);
+                    else return Command.STOP;
+                    System.out.println("Server terminate TCP connection");
+                    clientNewIp = tcpConnections.get(connection);
+                    connection.setClientAddr(clientNewIp);
+                    connectionState = tcpConnectionStates.get(connection);
+                    connectionState.finAckBackward();
+                    DatapathId natSwitchId = switches.get(NAT_SWITCH);
+                    serverIp = connection.getServerAddr();
+                    System.out.println("Remove NAT rule for " + connection);
+                    removeTCPTunnel(natSwitchId, clientOriginalIp, clientNewIp, serverIp, tcp.getDestinationPort(), tcp.getSourcePort(), U16.ofRaw(SYN));
+                    removeTCPTunnel(natSwitchId, clientOriginalIp, clientNewIp, serverIp, tcp.getDestinationPort(), tcp.getSourcePort(), U16.ofRaw(SYN_ACK));
+                    removeTCPTunnel(natSwitchId, clientOriginalIp, clientNewIp, serverIp, tcp.getDestinationPort(), tcp.getSourcePort(), U16.ofRaw(ACK));
+                    removeTCPTunnel(natSwitchId, clientOriginalIp, clientNewIp, serverIp, tcp.getDestinationPort(), tcp.getSourcePort(), U16.ofRaw(PUSH_ACK));
+                    OFFactory factory = sw.getOFFactory();
+                    removeNATOUTFlowEntry(makeTCPMatchBuilder(factory, OFPort.LOCAL, clientOriginalIp, serverIp, tcp.getDestinationPort(), tcp.getSourcePort(), U16.ofRaw(FIN_ACK)).build(),
+                                          sw, factory, OFPort.of(1), clientNewIp);
+                    System.out.println("Release client IP " + clientNewIp);
+                    allocatedClientIp.remove(clientNewIp);
+                    clientAddresses.add(clientNewIp);
+                    tcpConnections.remove(connection);
+                    tcpConnectionStates.remove(connection);
+                    System.out.println(connection + " terminated.");
+                    iPv4.setDestinationAddress(clientOriginalIp);
+                    iPv4.resetChecksum();
+                    tcp.resetChecksum();
+                    ethernet.setPayload(iPv4);
+                    ethernet.resetChecksum();
+                    sendOutPacket(sw, ethernet);
+                    break;
+                default:
+                    break;
+            }
         }
         return Command.STOP;
     }
@@ -181,9 +197,8 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
             sendOutPacket(sw, ethernet);
             return Command.CONTINUE;
         }
-        IPv4 iPv4 = (IPv4) packet;
-        if (!isAuthorizedClient(iPv4)) return Command.STOP;
         
+        IPv4 iPv4 = (IPv4) packet;
         if (iPv4.getProtocol().equals(IpProtocol.UDP)) {
             UDP udp = (UDP) iPv4.getPayload();
             if (udp.getSourcePort().getPort() == DNS_PORT) {
@@ -192,17 +207,12 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
                 Optional<ResourceRecord> record = findRecordFor(DOMAIN_NAME, modifiedDNSResponse);
                 if (record.isPresent() && switches.containsKey(SERVER_CLUSTER_SWITCH)) {
                     int ttl = record.get().getTtl();
-                    addTunnel(switches.get(SERVER_CLUSTER_SWITCH).toString(), iPv4.getDestinationAddress(), serverAddr, ttl);
+                    addTunnel(switches.get(SERVER_CLUSTER_SWITCH).toString(), serverAddr, ttl);
                 }
             }
         }
         sendOutPacket(sw, ethernet);
         return Command.STOP;
-    }
-    
-    private boolean isAuthorizedClient(IPv4 iPv4) {
-        IPv4Address src = iPv4.getSourceAddress(), dst = iPv4.getDestinationAddress();
-        return (acceptedAddresses.contains(src) || serverAddresses.contains(src)) && (acceptedAddresses.contains(dst) || serverAddresses.contains(dst));
     }
     
     
@@ -214,6 +224,13 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
     
     private Optional<ResourceRecord> findRecordFor(String domainName, DNSResponse modifiedDNSReponse) {
         return modifiedDNSReponse.getRecords().stream().filter(resourceRecord -> resourceRecord.getName().equals(domainName)).findFirst();
+    }
+    
+    private IPv4Address allocateClientIp() {
+        Random random = new Random();
+        int addrIndex = random.nextInt(clientAddresses.size());
+        IPv4Address clientIp = clientAddresses.remove(addrIndex);
+        return clientIp;
     }
     
     private IPv4Address getRandomServerAddr() {
@@ -233,6 +250,44 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
         addTunnel(switchId, EthType.IPv4, clientIp, serverIp, ttl);
     }
     
+    private void addTunnel(String switchId, IPv4Address serverIp, int ttl) {
+        addTunnel(switchId, EthType.ARP, serverIp, ttl);
+        addTunnel(switchId, EthType.IPv4, serverIp, ttl);
+    }
+    
+    private void addTunnel(String switchId, EthType ethType, IPv4Address serverIp, int ttl) {
+        IOFSwitch sw = switchService.getSwitch(DatapathId.of(switchId));
+        OFFactory factory = sw.getOFFactory();
+        addFlowEntry(makeMatchBuilderWithDst(ethType, factory, serverIp, OFPort.of(1)).build(), sw, factory, OFPort.LOCAL, ttl);
+        addFlowEntry(makeMatchBuilderWithSrc(ethType, factory, serverIp, OFPort.LOCAL).build(), sw, factory, OFPort.of(1), ttl);
+    }
+    
+    private void removeTCPTunnel(DatapathId switchId, IPv4Address privateClientIp, IPv4Address publicClientIp, IPv4Address serverIp, TransportPort clientPort, TransportPort serverPort, U16 flags) {
+        IOFSwitch sw = switchService.getSwitch(switchId);
+        OFFactory factory = sw.getOFFactory();
+        removeNATINFlowEntry(makeTCPMatchBuilder(factory, OFPort.of(1), serverIp, publicClientIp, serverPort, clientPort, flags).build(), sw, factory, OFPort.LOCAL, privateClientIp);
+        removeNATOUTFlowEntry(makeTCPMatchBuilder(factory, OFPort.LOCAL, privateClientIp, serverIp, clientPort, serverPort, flags).build(), sw, factory, OFPort.of(1), publicClientIp);
+    }
+    
+    private void removeNATINFlowEntry(Match match, IOFSwitch sw, OFFactory factory, OFPort outPort, IPv4Address privateClientIp) {
+        OFFlowAdd flowAdd = NATINFlowAdd(match, factory, outPort, privateClientIp);
+        OFFlowDelete flowDelete = FlowModUtils.toFlowDelete(flowAdd);
+        sw.write(flowDelete);
+    }
+    
+    private void removeNATOUTFlowEntry(Match match, IOFSwitch sw, OFFactory factory, OFPort outPort, IPv4Address publicClientIp) {
+        OFFlowAdd flowAdd = NATOUTFlowAdd(match, factory, outPort, publicClientIp);
+        OFFlowDelete flowDelete = FlowModUtils.toFlowDelete(flowAdd);
+        sw.write(flowDelete);
+    }
+    
+    private void addTCPTunnel(DatapathId switchId, IPv4Address privateClientIp, IPv4Address publicClientIp, IPv4Address serverIp, TransportPort clientPort, TransportPort serverPort, U16 flags) {
+        IOFSwitch sw = switchService.getSwitch(switchId);
+        OFFactory factory = sw.getOFFactory();
+        addNATINFlowEntry(makeTCPMatchBuilder(factory, OFPort.of(1), serverIp, publicClientIp, serverPort, clientPort, flags).build(), sw, factory, OFPort.LOCAL, privateClientIp);
+        addNATOUTFlowEntry(makeTCPMatchBuilder(factory, OFPort.LOCAL, privateClientIp, serverIp, clientPort, serverPort, flags).build(), sw, factory, OFPort.of(1), publicClientIp);
+    }
+    
     private void addTunnel(String switchId, EthType ethType, IPv4Address clientIp, IPv4Address serverIp, int ttl) {
         IOFSwitch sw = switchService.getSwitch(DatapathId.of(switchId));
         addFlowEntry(sw, ethType, clientIp, serverIp, OFPort.of(1), OFPort.LOCAL, ttl);
@@ -245,6 +300,18 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
         addFlowEntry(match, sw, factory, outPort, ttl);
     }
     
+    private Match.Builder makeMatchBuilderWithSrc(EthType ethType, OFFactory factory, IPv4Address srcIp, OFPort inPort) {
+        if (ethType.equals(EthType.ARP)) return factory.buildMatch().setExact(MatchField.ETH_TYPE, EthType.ARP).setExact(MatchField.ARP_SPA, srcIp).setExact(MatchField.IN_PORT, inPort);
+        else if (ethType.equals(EthType.IPv4)) return factory.buildMatch().setExact(MatchField.ETH_TYPE, EthType.IPv4).setExact(MatchField.IPV4_SRC, srcIp).setExact(MatchField.IN_PORT, inPort);
+        return factory.buildMatch();
+    }
+    
+    private Match.Builder makeMatchBuilderWithDst(EthType ethType, OFFactory factory, IPv4Address destIp, OFPort inPort) {
+        if (ethType.equals(EthType.ARP)) return factory.buildMatch().setExact(MatchField.ETH_TYPE, EthType.ARP).setExact(MatchField.ARP_TPA, destIp).setExact(MatchField.IN_PORT, inPort);
+        else if (ethType.equals(EthType.IPv4)) return factory.buildMatch().setExact(MatchField.ETH_TYPE, EthType.IPv4).setExact(MatchField.IPV4_DST, destIp).setExact(MatchField.IN_PORT, inPort);
+        return factory.buildMatch();
+    }
+    
     
     private Match.Builder makeMatchBuilder(EthType ethType, OFFactory factory, IPv4Address srcIp, IPv4Address destIp, OFPort inPort) {
         if (ethType.equals(EthType.ARP))
@@ -254,9 +321,44 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
         return factory.buildMatch();
     }
     
-    private Match.Builder makeTCPMatchBuilder(OFFactory factory, IPv4Address srcIp, IPv4Address destIp, int srcPort, int dstPort, U16 tcpFlags) {
-        return factory.buildMatch().setExact(MatchField.ETH_TYPE, EthType.IPv4).setExact(MatchField.IPV4_SRC, srcIp).setExact(MatchField.IPV4_DST, destIp).setExact(MatchField.IP_PROTO, IpProtocol
-                .TCP).setExact(MatchField.TCP_SRC, TransportPort.of(srcPort)).setExact(MatchField.TCP_DST, TransportPort.of(dstPort)).setExact(MatchField.TCP_FLAGS, tcpFlags);
+    private Match.Builder makeTCPMatchBuilder(OFFactory factory, OFPort inPort, IPv4Address srcIp, IPv4Address destIp, TransportPort srcPort, TransportPort dstPort, U16 flags) {
+        return factory.buildMatch().setExact(MatchField.IN_PORT, inPort).setExact(MatchField.ETH_TYPE, EthType.IPv4).setExact(MatchField.IPV4_SRC, srcIp).setExact(MatchField.IPV4_DST, destIp)
+                .setExact(MatchField.IP_PROTO, IpProtocol.TCP).setExact(MatchField.TCP_SRC, srcPort).setExact(MatchField.TCP_DST, dstPort).setExact(MatchField.OVS_TCP_FLAGS, flags);
+    }
+    
+    private OFFlowAdd NATFlowAdd(Match match, OFFactory factory, OFPort outPort, OFActionSetField actionSetField) {
+        OFActions actions = factory.actions();
+        ArrayList<OFAction> actionList = new ArrayList<>();
+        actionList.add(actionSetField);
+        OFActionOutput output = actions.buildOutput().setPort(outPort).build();
+        actionList.add(output);
+        OFInstructions instructions = factory.instructions();
+        OFInstructionApplyActions applyActions = instructions.buildApplyActions().setActions(actionList).build();
+        List<OFInstruction> instList = new ArrayList<>();
+        instList.add(applyActions);
+        return factory.buildFlowAdd().setPriority(100).setMatch(match).setInstructions(instList).build();
+    }
+    
+    private OFFlowAdd NATOUTFlowAdd(Match match, OFFactory factory, OFPort outPort, IPv4Address publicClientIp) {
+        OFOxms oxms = factory.oxms();
+        OFActions actions = factory.actions();
+        OFActionSetField setNwSrc = actions.buildSetField().setField(oxms.buildIpv4Src().setValue(publicClientIp).build()).build();
+        return NATFlowAdd(match, factory, outPort, setNwSrc);
+    }
+    
+    private OFFlowAdd NATINFlowAdd(Match match, OFFactory factory, OFPort outPort, IPv4Address privateClientIp) {
+        OFOxms oxms = factory.oxms();
+        OFActions actions = factory.actions();
+        OFActionSetField setNwDst = actions.buildSetField().setField(oxms.buildIpv4Dst().setValue(privateClientIp).build()).build();
+        return NATFlowAdd(match, factory, outPort, setNwDst);
+    }
+    
+    private void addNATINFlowEntry(Match match, IOFSwitch sw, OFFactory factory, OFPort outPort, IPv4Address privateClientIp) {
+        sw.write(NATINFlowAdd(match, factory, outPort, privateClientIp));
+    }
+    
+    private void addNATOUTFlowEntry(Match match, IOFSwitch sw, OFFactory factory, OFPort outPort, IPv4Address publicClientIp) {
+        sw.write(NATOUTFlowAdd(match, factory, outPort, publicClientIp));
     }
     
     private void addFlowEntry(Match match, IOFSwitch sw, OFFactory factory, OFPort outPort, int ttl) {
@@ -368,7 +470,8 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
         switchNames.put("10.45.2.2", "DNS SWITCH");
         switchNames.put("10.45.2.3", "SERVER CLUSTER SWITCH");
         tcpConnections = new HashMap<>();
-        allocationClientIp = new LinkedList<>();
+        tcpConnectionStates = new HashMap<>();
+        allocatedClientIp = new HashSet<>();
     }
     
     @Override
