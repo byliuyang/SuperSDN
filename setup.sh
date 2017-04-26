@@ -19,7 +19,7 @@ if [ $1 = "1" ]; then
   ovs-vsctl add-br br0 && ovs-vsctl add-port br0 eth0 &&  ifconfig eth0 0 && dhclient -r eth0 &&  dhclient br0 && ifconfig br0 10.45.2.1 &&  ovs-vsctl set-controller br0 tcp:$2:6653
   for i in `seq 48 62`;
   do
-    ifconfig eth0:$i 10.45.2.$i up
+    ifconfig br0:$i 10.45.2.$i up
   done
 elif [ $1 = "2" ]; then
 	echo "DEPLOYING SERVER 2"
@@ -78,7 +78,7 @@ elif [ $1 = "3" ]; then
 
     for i in `seq 128 254`;
 	do
-		ifconfig eth0:$i 10.45.2.$i up
+		ifconfig br0:$i 10.45.2.$i up
 	done
 
 elif [ $1 = "4" ]; then
