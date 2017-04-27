@@ -62,7 +62,7 @@ public class ExternalLinksResource extends ServerResource {
                     if (otherType == LinkType.MULTIHOP_LINK) {
                         // This is a bi-direcitonal link.
                         // It is sufficient to add only one side of it.
-                        if ((src.getLong() < dst.getLong()) || (src.getLong() == dst.getLong() 
+                        if ((src.getLong() < dst.getLong()) || (src.getLong() == dst.getLong()
                         		&& srcPort.getPortNumber() < dstPort.getPortNumber())) {
                             lwt = new LinkWithType(link,
                                     type,

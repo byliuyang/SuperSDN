@@ -16,3 +16,5 @@ findbugs-results
 *.iml
 .metadata/
 /bin/
+.floo
+.flooignore

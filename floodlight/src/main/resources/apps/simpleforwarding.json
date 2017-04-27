@@ -9,8 +9,6 @@
         "net.floodlightcontroller.devicemanager.internal.DefaultEntityClassifier",
         "net.floodlightcontroller.staticflowentry.StaticFlowEntryPusher",
         "net.floodlightcontroller.firewall.Firewall",
-        "net.floodlightcontroller.forwarding.Forwarding",
-        "net.floodlightcontroller.linkdiscovery.internal.LinkDiscoveryManager",
         "net.floodlightcontroller.topology.TopologyManager",
         "net.floodlightcontroller.flowcache.FlowReconcileManager",
         "net.floodlightcontroller.debugcounter.DebugCounter",

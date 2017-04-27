@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class LinkInfo {
 	private static final Logger log = LoggerFactory.getLogger(LinkInfo.class);
-	
+
 	private Date firstSeenTime;
 	private Date lastLldpReceivedTime; /* Standard LLDP received time */
 	private Date lastBddpReceivedTime; /* Modified LLDP received time  */
@@ -36,7 +36,7 @@ public class LinkInfo {
 	private ArrayDeque<U64> latencyHistory;
 	private int latencyHistoryWindow;
 	private double latencyUpdateThreshold;
-	
+
 	public LinkInfo(Date firstSeenTime, Date lastLldpReceivedTime, Date lastBddpReceivedTime) {
 		this.firstSeenTime = firstSeenTime;
 		this.lastLldpReceivedTime = lastLldpReceivedTime;
@@ -57,7 +57,7 @@ public class LinkInfo {
 		this.latencyUpdateThreshold = fromLinkInfo.getLatencyUpdateThreshold();
 	}
 
-	/** 
+	/**
 	 * The port states stored here are topology's last knowledge of
 	 * the state of the port. This mostly mirrors the state
 	 * maintained in the port list in IOFSwitch (i.e. the one returned
@@ -75,7 +75,7 @@ public class LinkInfo {
 	private double getLatencyUpdateThreshold() {
 		return latencyUpdateThreshold;
 	}
-	
+
 	private ArrayDeque<U64> getLatencyHistory() {
 		return latencyHistory;
 	}
@@ -92,7 +92,7 @@ public class LinkInfo {
 			return U64.of((long) avg);
 		}
 	}
-	
+
 	/**
 	 * Retrieve the current latency, and if necessary
 	 * compute and replace the current latency with an
@@ -103,9 +103,9 @@ public class LinkInfo {
 		U64 newLatency = getLatencyHistoryAverage();
 		if (newLatency != null) {
 			/* check threshold */
-			if ((((double) Math.abs(newLatency.getValue() - currentLatency.getValue())) 
+			if ((((double) Math.abs(newLatency.getValue() - currentLatency.getValue()))
 					/ (currentLatency.getValue() == 0 ? 1 : currentLatency.getValue())
-					) 
+					)
 					>= latencyUpdateThreshold) {
 				/* perform update */
 				log.debug("Updating link latency from {} to {}", currentLatency.getValue(), newLatency.getValue());
@@ -120,19 +120,19 @@ public class LinkInfo {
 	 * to consider computing a new latency value based
 	 * on the historical average. A minimum history size
 	 * must be met prior to updating a latency.
-	 * 
+	 *
 	 * @return true if full; false if not full
 	 */
 	private boolean isLatencyHistoryFull() {
 		return (latencyHistory.size() == latencyHistoryWindow);
 	}
-	
+
 	/**
 	 * Append a new (presumably most recent) latency
 	 * to the list. Sets the current latency if this
 	 * is the first latency update performed. Note
 	 * the latter serves as a latency initializer.
-	 * 
+	 *
 	 * @param latency
 	 * @return latency to use for the link; either initial or historical average
 	 */
@@ -149,7 +149,7 @@ public class LinkInfo {
 			return getLatency();
 		}
 	}
-	
+
 	/**
 	 * Read-only. Retrieve the currently-assigned
 	 * latency for this link. Does not attempt to
