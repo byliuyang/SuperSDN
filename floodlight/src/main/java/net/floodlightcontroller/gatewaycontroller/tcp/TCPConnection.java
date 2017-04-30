@@ -1,4 +1,4 @@
-package net.floodlightcontroller.gatewaycontroller.dns;
+package net.floodlightcontroller.gatewaycontroller.tcp;
 
 import net.floodlightcontroller.packet.TCP;
 import org.projectfloodlight.openflow.types.IPv4Address;

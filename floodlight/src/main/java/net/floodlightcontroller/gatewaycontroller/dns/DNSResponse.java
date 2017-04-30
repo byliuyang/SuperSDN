@@ -4,7 +4,6 @@ import net.floodlightcontroller.packet.Data;
 import net.floodlightcontroller.packet.Ethernet;
 import net.floodlightcontroller.packet.IPv4;
 import net.floodlightcontroller.packet.UDP;
-import org.apache.commons.lang.StringUtils;
 import org.projectfloodlight.openflow.types.IPv4Address;
 
 import java.util.ArrayList;
@@ -53,12 +52,6 @@ public class DNSResponse {
         iPv4.setPayload(udp);
         ethernet.setPayload(iPv4);
         return makeDNSResponse(modifiedResponseBytes);
-    }
-    
-    @Override
-    public String toString() {
-        return String.format("DNS Response\n\n;;Transaction ID\n%x\n\n;;QUERY: %d, ANSWER: %d\n\n;; QUESTION SECTION:\n%s\n\n;; ANSWER SECTION:\n%s\n", transactionId & 0xffff,
-                             questionRecordCount, answerRecordCount, StringUtils.join(questions, "\n"), StringUtils.join(records, "\n"));
     }
     
     public ArrayList<ResourceRecord> getRecords() {

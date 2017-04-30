@@ -11,7 +11,8 @@ import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.gatewaycontroller.dns.DNSResponse;
 import net.floodlightcontroller.gatewaycontroller.dns.ResourceRecord;
-import net.floodlightcontroller.gatewaycontroller.dns.TCPConnection;
+import net.floodlightcontroller.gatewaycontroller.tcp.TCPConnection;
+import net.floodlightcontroller.gatewaycontroller.tcp.TCPConnectionState;
 import net.floodlightcontroller.packet.*;
 import net.floodlightcontroller.util.FlowModUtils;
 import org.projectfloodlight.openflow.protocol.*;
@@ -32,7 +33,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static net.floodlightcontroller.gatewaycontroller.dns.DNSResponse.modifyDNSReponse;
-import static net.floodlightcontroller.gatewaycontroller.dns.TCPFlags.*;
+import static net.floodlightcontroller.gatewaycontroller.tcp.TCPFlags.*;
 
 /**
  * This class implements a gateway controller as a floodlight module
