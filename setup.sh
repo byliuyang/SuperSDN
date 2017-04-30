@@ -59,7 +59,7 @@ www.team2.4516.cs.wpi.edu.                     IN      A      10.45.1.10
 	named-checkzone team2.4516.cs.wpi.edu /etc/bind/zones/db.team2.4516.cs.wpi.edu
 	apt install -y openvswitch-switch
 	service openvswitch-switch start
-	ovs-vsctl add-br br0 && ovs-vsctl add-port br0 eth0 &&  ifconfig eth0 0 && dhclient -r eth0 &&  dhclient br0 && ifconfig br0 10.45.2.2 &&  ovs-vsctl set-controller br0 tcp:10.10.152.59:6653
+	ovs-vsctl add-br br0 && ovs-vsctl add-port br0 eth0 &&  ifconfig eth0 0 && dhclient -r eth0 &&  dhclient br0 && ifconfig br0 10.45.2.2 &&  ovs-vsctl set-controller br0 tcp:$2:6653
 elif [ $1 = "3" ]; then
 	echo "DEPLOYING SERVER 3"
 	apt install -y bind9
@@ -83,9 +83,10 @@ elif [ $1 = "3" ]; then
 
 elif [ $1 = "4" ]; then
 	echo "DEPLOYING SERVER 4"
-	apt install -y openvswitch-switch
-	service openvswitch-switch start
-	ovs-vsctl add-br br0 && ovs-vsctl add-port br0 eth0 &&  ifconfig eth0 0 && dhclient -r eth0 &&  dhclient br0 && ifconfig br0 10.45.2.4 &&  ovs-vsctl set-controller br0 tcp:$2:6653
+	apt install build-essential ant maven python-dev
+	apt install default-jdk
+	cd floodlight
+	ant
 else
 	echo "ARGUEMENT NOT RECOGNIZED BUT DEPLOYED COMMON SETTINGS"
 fi

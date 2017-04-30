@@ -134,6 +134,7 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
                         serverIp = iPv4.getDestinationAddress();
                         DatapathId natSwitchId = switches.get(NAT_SWITCH);
                         System.out.println("Add NAT rules for " + connection);
+                        addTunnel(natSwitchId.toString(), EthType.ARP, clientNewIp, 3600);
                         addTCPTunnel(natSwitchId, clientOriginalIp, clientNewIp, serverIp, tcp.getSourcePort(), tcp.getDestinationPort(), U16.ofRaw(SYN));
                         addTCPTunnel(natSwitchId, clientOriginalIp, clientNewIp, serverIp, tcp.getSourcePort(), tcp.getDestinationPort(), U16.ofRaw(SYN_ACK));
                         addTCPTunnel(natSwitchId, clientOriginalIp, clientNewIp, serverIp, tcp.getSourcePort(), tcp.getDestinationPort(), U16.ofRaw(ACK));
