@@ -1,5 +1,3 @@
-Please enter the server address: 10.45.2.3
-Resolved adress is: 10.45.2.3
 Testing:
 0: Connected within: 9 ms
 1: Connected within: 12 ms
@@ -103,4 +101,3 @@ Testing:
 99: Connected within: 3 ms
 100: Connected within: 3 ms
 Avg time: 3.86 ms
-cs4516@cs4516:~$

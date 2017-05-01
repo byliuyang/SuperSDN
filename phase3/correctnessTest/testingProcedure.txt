@@ -1,0 +1,10 @@
+To test the correctness of our implementation, we followed the procedures below:
+
+1) Perform DNS query
+2) Extract the IP address from the DNS response
+3) Record the TTL from DNS response
+4) Then we try to connect to the server with the extracted IP address, making sure connection successfully estanblished.
+5) Wait 5 more seconds after the TTL
+6) Try to connect to server again
+7) Wait for 5 seconds, making sure not able to get any response from the server.
+8) Repeat step 1-7 100 times, making sure each time getting a different IP address. 
