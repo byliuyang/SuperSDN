@@ -1,0 +1,18 @@
+The average time to establish TCP connection without NAT is 3.86 ms. However, for the NAT system, the average time for connection increases to 24.86 ms.
+Both approaches require:
+1) The switch to send TCP SYN and FIN, ACK packet to controller
+2) Send modified packet back to the switch
+
+For Gateway system with out NAT
+1) the controller have to modify the source and destination MAC address of the packet
+
+The NAT system slows down the TCP traffic for the following few reasons:
+1) When initializing the TCP connection, it has to select a random IP for the client.
+2) The controller has to save the connection to its memory.
+3) The controller has to generate corresponding NAT rule for TCP and ARP traffics.
+4) The controller has to install the rules to Openvswitch ( transfer rules to the switch)
+5) The controller has to modify the source IP in TCP SYN packet.
+6) Each time, the switch have to modify destination IP address for the incoming TCP traffic.
+
+Since the tool only tests establishment of TCP connection, the Gateway does not seem to add much overhead to time establishing TCP connection.
+The NAT system appears to be much slower than the pure Gateway system even though after installing Flowmod rules, the switch doesn't have to send packets though the controller. 

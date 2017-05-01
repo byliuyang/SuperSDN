@@ -1,4 +1,4 @@
-package net.floodlightcontroller.gatewaycontroller.dns;
+package net.floodlightcontroller.gatewaycontroller.tcp;
 
 /**
  * This class specifies list of TCP flags

@@ -80,6 +80,11 @@ elif [ $1 = "3" ]; then
 	do
 		ifconfig br0:$i 10.45.2.$i up
 	done
+elif [ $1 = "4"]; then
+	apt-get install build-essential ant maven python-dev default-jdk
+	cd floodlight
+	ant
+	java -jar target/floodlight.jar
 else
 	echo "ARGUEMENT NOT RECOGNIZED BUT DEPLOYED COMMON SETTINGS"
 fi

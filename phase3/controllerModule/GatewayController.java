@@ -11,9 +11,10 @@ import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import net.floodlightcontroller.gatewaycontroller.dns.DNSResponse;
 import net.floodlightcontroller.gatewaycontroller.dns.ResourceRecord;
-import net.floodlightcontroller.gatewaycontroller.tcp.TCPConnection;
-import net.floodlightcontroller.gatewaycontroller.tcp.TCPConnectionState;
-import net.floodlightcontroller.packet.*;
+import net.floodlightcontroller.packet.Ethernet;
+import net.floodlightcontroller.packet.IPacket;
+import net.floodlightcontroller.packet.IPv4;
+import net.floodlightcontroller.packet.UDP;
 import net.floodlightcontroller.util.FlowModUtils;
 import org.projectfloodlight.openflow.protocol.*;
 import org.projectfloodlight.openflow.protocol.action.OFAction;
@@ -33,7 +34,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static net.floodlightcontroller.gatewaycontroller.dns.DNSResponse.modifyDNSReponse;
-import static net.floodlightcontroller.gatewaycontroller.tcp.TCPFlags.*;
 
 /**
  * This class implements a gateway controller as a floodlight module
@@ -47,9 +47,7 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
     private final  String      DOMAIN_NAME           = "www.team2.4516.cs.wpi.edu.";
     private final  int         DNS_PORT              = 53;
     private final  int         SSH_TTL               = 3600;
-    private final  IPv4Address clientOriginalIp      = IPv4Address.of("10.45.2.1");
     private final  String      DNS_SWITCH            = "10.45.2.2";
-    private final  String      NAT_SWITCH            = "10.45.2.1";
     private final  String      SERVER_CLUSTER_SWITCH = "10.45.2.3";
     protected IFloodlightProviderService                 floodlightProvider;
     protected IOFSwitchService                           switchService;
@@ -60,8 +58,6 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
     private   List<IPv4Address>                          serverAddresses;
     private   List<IPv4Address>                          clientAddresses;
     private   HashSet<IPv4Address>                       allocatedClientIp;
-    private   HashMap<TCPConnection, TCPConnectionState> tcpConnectionStates;
-    private   HashMap<TCPConnection, IPv4Address>        tcpConnections;
     
     @Override
     public String getName() {
@@ -91,102 +87,9 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
         switch (switchIp) {
             case DNS_SWITCH:
                 return processDNSSwitchPacket(sw, ethernet);
-            case NAT_SWITCH:
-                return processNATSwitchPacket(sw, ethernet);
             case SERVER_CLUSTER_SWITCH:
                 return Command.STOP;
         } return Command.STOP;
-    }
-    
-    private Command processNATSwitchPacket(IOFSwitch sw, Ethernet ethernet) {
-        IPacket packet = ethernet.getPayload();
-        IPv4 iPv4;
-        
-        if (isNotIPv4Packet(ethernet, packet)) {
-            sendOutPacket(sw, ethernet);
-            return Command.STOP;
-        }
-    
-        iPv4 = (IPv4) packet;
-        if (iPv4.getDestinationAddress().equals(IPv4Address.of(DNS_SWITCH))) sendOutPacket(sw, ethernet);
-        else if (iPv4.getSourceAddress().equals(IPv4Address.of(DNS_SWITCH))) sendOutPacket(sw, ethernet);
-        if (iPv4.getProtocol() == IpProtocol.TCP) {
-            TCP tcp = (TCP) iPv4.getPayload();
-        
-            short flags = tcp.getFlags();
-            TCPConnection connection;
-            TCPConnectionState connectionState;
-            IPv4Address clientNewIp;
-            IPv4Address serverIp;
-            switch (flags) {
-                case SYN:
-                    if (!iPv4.getSourceAddress().equals(clientOriginalIp)) return Command.STOP;
-                    clientNewIp = allocateClientIp();
-                    connection = TCPConnection.makeTCPConnection(tcp, clientNewIp, iPv4.getDestinationAddress());
-                    System.out.println();
-                    System.out.println("Client initiates " + connection);
-                    if (!tcpConnectionStates.containsKey(connection)) {
-                        allocatedClientIp.add(clientNewIp);
-                        connectionState = new TCPConnectionState();
-                        connectionState.synforward();
-                        tcpConnections.put(connection, clientNewIp);
-                        tcpConnectionStates.put(connection, connectionState);
-                        if (!switches.containsKey(NAT_SWITCH)) return Command.STOP;
-                        serverIp = iPv4.getDestinationAddress();
-                        DatapathId natSwitchId = switches.get(NAT_SWITCH);
-                        System.out.println("Add NAT rules for " + connection);
-                        addTunnel(natSwitchId.toString(), EthType.ARP, clientNewIp, 3600);
-                        addTCPTunnel(natSwitchId, clientOriginalIp, clientNewIp, serverIp, tcp.getSourcePort(), tcp.getDestinationPort(), U16.ofRaw(SYN));
-                        addTCPTunnel(natSwitchId, clientOriginalIp, clientNewIp, serverIp, tcp.getSourcePort(), tcp.getDestinationPort(), U16.ofRaw(SYN_ACK));
-                        addTCPTunnel(natSwitchId, clientOriginalIp, clientNewIp, serverIp, tcp.getSourcePort(), tcp.getDestinationPort(), U16.ofRaw(ACK));
-                        addTCPTunnel(natSwitchId, clientOriginalIp, clientNewIp, serverIp, tcp.getSourcePort(), tcp.getDestinationPort(), U16.ofRaw(PUSH_ACK));
-                        OFFactory factory = sw.getOFFactory();
-                        addNATOUTFlowEntry(makeTCPMatchBuilder(factory, OFPort.LOCAL, clientOriginalIp, serverIp, tcp.getSourcePort(), tcp.getDestinationPort(), U16.ofRaw(FIN_ACK)).build(),
-                                           sw, factory, OFPort.of(1), clientNewIp);
-                        iPv4.setSourceAddress(clientNewIp);
-                        iPv4.resetChecksum();
-                        tcp.resetChecksum();
-                        ethernet.setPayload(iPv4);
-                        ethernet.resetChecksum();
-                        sendOutPacket(sw, ethernet);
-                    }
-                    break;
-                case FIN_ACK:
-                    if (allocatedClientIp.contains(iPv4.getDestinationAddress())) connection = TCPConnection.makeReverseTCPConnection(tcp, iPv4.getSourceAddress(), null);
-                    else return Command.STOP;
-                    System.out.println("Server terminate TCP connection");
-                    clientNewIp = tcpConnections.get(connection);
-                    connection.setClientAddr(clientNewIp);
-                    connectionState = tcpConnectionStates.get(connection);
-                    connectionState.finAckBackward();
-                    DatapathId natSwitchId = switches.get(NAT_SWITCH);
-                    serverIp = connection.getServerAddr();
-                    System.out.println("Remove NAT rule for " + connection);
-                    removeTCPTunnel(natSwitchId, clientOriginalIp, clientNewIp, serverIp, tcp.getDestinationPort(), tcp.getSourcePort(), U16.ofRaw(SYN));
-                    removeTCPTunnel(natSwitchId, clientOriginalIp, clientNewIp, serverIp, tcp.getDestinationPort(), tcp.getSourcePort(), U16.ofRaw(SYN_ACK));
-                    removeTCPTunnel(natSwitchId, clientOriginalIp, clientNewIp, serverIp, tcp.getDestinationPort(), tcp.getSourcePort(), U16.ofRaw(ACK));
-                    removeTCPTunnel(natSwitchId, clientOriginalIp, clientNewIp, serverIp, tcp.getDestinationPort(), tcp.getSourcePort(), U16.ofRaw(PUSH_ACK));
-                    OFFactory factory = sw.getOFFactory();
-                    removeNATOUTFlowEntry(makeTCPMatchBuilder(factory, OFPort.LOCAL, clientOriginalIp, serverIp, tcp.getDestinationPort(), tcp.getSourcePort(), U16.ofRaw(FIN_ACK)).build(),
-                                          sw, factory, OFPort.of(1), clientNewIp);
-                    System.out.println("Release client IP " + clientNewIp);
-                    allocatedClientIp.remove(clientNewIp);
-                    clientAddresses.add(clientNewIp);
-                    tcpConnections.remove(connection);
-                    tcpConnectionStates.remove(connection);
-                    System.out.println(connection + " terminated.");
-                    iPv4.setDestinationAddress(clientOriginalIp);
-                    iPv4.resetChecksum();
-                    tcp.resetChecksum();
-                    ethernet.setPayload(iPv4);
-                    ethernet.resetChecksum();
-                    sendOutPacket(sw, ethernet);
-                    break;
-                default:
-                    break;
-            }
-        }
-        return Command.STOP;
     }
     
     private void log(String switchIp, String msg) {
@@ -471,8 +374,6 @@ public class GatewayController implements IFloodlightModule, IOFMessageListener 
         switchNames.put("10.45.2.1", "NAT SWITCH");
         switchNames.put("10.45.2.2", "DNS SWITCH");
         switchNames.put("10.45.2.3", "SERVER CLUSTER SWITCH");
-        tcpConnections = new HashMap<>();
-        tcpConnectionStates = new HashMap<>();
         allocatedClientIp = new HashSet<>();
     }
     

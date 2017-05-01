@@ -1,0 +1,500 @@
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.128
+Tring to connect...
+0: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.225
+Tring to connect...
+1: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.178
+Tring to connect...
+2: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.248
+Tring to connect...
+3: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.227
+Tring to connect...
+4: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.158
+Tring to connect...
+5: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.213
+Tring to connect...
+6: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.221
+Tring to connect...
+7: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.204
+Tring to connect...
+8: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.277
+Tring to connect...
+9: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.128
+Tring to connect...
+10: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.225
+Tring to connect...
+11: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.178
+Tring to connect...
+12: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.248
+Tring to connect...
+13: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.227
+Tring to connect...
+14: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.158
+Tring to connect...
+15: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.213
+Tring to connect...
+16: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.221
+Tring to connect...
+17: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.204
+Tring to connect...
+18: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.277
+Tring to connect...
+19: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.128
+Tring to connect...
+20: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.225
+Tring to connect...
+21: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.178
+Tring to connect...
+22: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.248
+Tring to connect...
+23: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.227
+Tring to connect...
+24: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.158
+Tring to connect...
+25: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.213
+Tring to connect...
+26: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.221
+Tring to connect...
+27: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.204
+Tring to connect...
+28: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.277
+Tring to connect...
+29: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.128
+Tring to connect...
+30: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.225
+Tring to connect...
+31: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.178
+Tring to connect...
+32: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.248
+Tring to connect...
+33: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.227
+Tring to connect...
+34: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.158
+Tring to connect...
+35: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.213
+Tring to connect...
+36: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.221
+Tring to connect...
+37: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.204
+Tring to connect...
+38: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.277
+Tring to connect...
+39: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.128
+Tring to connect...
+40: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.225
+Tring to connect...
+41: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.178
+Tring to connect...
+42: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.248
+Tring to connect...
+43: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.227
+Tring to connect...
+44: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.158
+Tring to connect...
+45: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.213
+Tring to connect...
+46: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.221
+Tring to connect...
+47: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.204
+Tring to connect...
+48: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.277
+Tring to connect...
+49: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.128
+Tring to connect...
+50: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.225
+Tring to connect...
+51: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.178
+Tring to connect...
+52: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.248
+Tring to connect...
+53: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.227
+Tring to connect...
+54: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.158
+Tring to connect...
+55: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.213
+Tring to connect...
+56: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.221
+Tring to connect...
+57: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.204
+Tring to connect...
+58: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.277
+Tring to connect...
+59: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.128
+Tring to connect...
+60: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.225
+Tring to connect...
+61: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.178
+Tring to connect...
+62: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.248
+Tring to connect...
+63: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.227
+Tring to connect...
+64: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.158
+Tring to connect...
+65: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.213
+Tring to connect...
+66: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.221
+Tring to connect...
+67: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.204
+Tring to connect...
+68: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.277
+Tring to connect...
+69: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.128
+Tring to connect...
+70: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.225
+Tring to connect...
+71: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.178
+Tring to connect...
+72: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.248
+Tring to connect...
+73: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.227
+Tring to connect...
+74: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.158
+Tring to connect...
+75: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.213
+Tring to connect...
+76: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.221
+Tring to connect...
+77: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.204
+Tring to connect...
+78: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.277
+Tring to connect...
+79: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+80: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.225
+Tring to connect...
+81: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.178
+Tring to connect...
+82: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.248
+Tring to connect...
+83: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.227
+Tring to connect...
+84: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.158
+Tring to connect...
+85: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.213
+Tring to connect...
+86: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.221
+Tring to connect...
+87: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.204
+Tring to connect...
+88: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.277
+Tring to connect...
+89: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.128
+Tring to connect...
+90: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.225
+Tring to connect...
+91: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.178
+Tring to connect...
+92: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.248
+Tring to connect...
+93: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.227
+Tring to connect...
+94: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.158
+Tring to connect...
+95: Connected within: 4 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.213
+Tring to connect...
+96: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.221
+Tring to connect...
+97: Connected within: 2 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.204
+Tring to connect...
+98: Connected within: 3 ms
+TTL expired
+Cannot connect to server 
+Resolved adress for www.team2.4516.cs.wpi.edu is: 10.45.2.277
+Tring to connect...
+99: Connected within: 1 ms
+TTL expired
+Cannot connect to server 
+
+Average time: 2.6ms

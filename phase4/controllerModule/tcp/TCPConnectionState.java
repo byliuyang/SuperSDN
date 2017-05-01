@@ -1,4 +1,4 @@
-package net.floodlightcontroller.gatewaycontroller;
+package net.floodlightcontroller.gatewaycontroller.tcp;
 
 /**
  * This class keep track of the state of TCPConnection

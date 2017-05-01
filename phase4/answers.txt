@@ -1,0 +1,15 @@
+1) Does the approach offer any security benefits? If so, what are they? Are there any other benefits that could result from using the system?
+Yes, it does. In our approach, the client is hidden and protected behind NAT. The client cannot be actively connected from the outside. This protects clients from being actively attacked by hackers.
+Even though our client connected to the malicious servers through TCP connection, after the connection ended, the outside attacker will not be able to attack client anymore.
+The NAT system also provides anonymity to the client. The fluxing IPs prevent outside world from profiling the client's traffic from separate TCP connections.
+
+2) The IPNL paper described strong concerns about network address translation. Do these same concerns apply to the NAT approach implemented in Phase 4? Why or why not?
+We believe that those concerns do apply to the NAT approach implemented in Phase 4. Our NAT implementation does precipitate certain peer to peer application, including applications using session initiation protocol.  The client behind our NAT box is not globally addressable. 
+Our OpenFlow controller and Openvswitch will also be able to snoop client's traffic without client's notice.
+
+3) What implications would this end-host OpenFlow/NAT approach have on a network like WPI’s? When two machines on the LAN communicate, what would we expect to happen? What about when these machines communicate with off LAN systems?
+This system would protect machines inside WPI's network from being attacked by the malicious user. When two machines behind the NAT communicates with other, they only have to know each other's static IP address. 
+Then they will be able to connect to each other without going through the OpenFlow controller. When client behind the NAT is trying to connect a server outside the NAT, it going to first perform a DNS query, then initiate TCP connection to the server with IP address extracted from DNS response.
+The controller will capture client's TCP request and assign it a random IP address selected from the address space. The controller will then insert Flowmod rules to the switch, automatically modifying client's source IP for the specific connection. 
+When the switch receives a packet of the TCP connection from the outside world, it going to change the destination IP address of the packet to client's IP. Then the switch directs the packet to the client. On connection end, the switch will automatically remove Flowmod rule previous installed for the client.
+Unfortunately, host from outside world cannot directly connect to the client behind the NAT due to flux IP addresses.
